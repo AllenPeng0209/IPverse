@@ -7,20 +7,20 @@ from tools.utils.image_generation_core import generate_image_with_provider
 
 class GenerateImageByGptImage1InputSchema(BaseModel):
     prompt: str = Field(
-        description="Required. The prompt for image generation. If you want to edit an image, please describe what you want to edit in the prompt."
+        description="Required. The prompt for IP character creation or editing. Be detailed about character features, expressions, poses, and visual style to maintain consistency across your IP character series."
     )
     aspect_ratio: str = Field(
-        description="Required. Aspect ratio of the image, only these values are allowed: 1:1, 16:9, 4:3, 3:4, 9:16. Choose the best fitting aspect ratio according to the prompt. Best ratio for posters is 3:4"
+        description="Required. Aspect ratio of the image, only these values are allowed: 1:1, 16:9, 4:3, 3:4, 9:16. For IP characters: use 1:1 for emoji/stickers, 3:4 for character portraits, 16:9 for animated scenes"
     )
     input_images: list[str] | None = Field(
         default=None,
-        description="Optional; One or multiple images to use as reference. Pass a list of image_id here, e.g. ['im_jurheut7.png', 'im_hfuiut78.png']. Best for image editing cases like: Editing specific parts of the image, Removing specific objects, Maintaining visual elements across scenes (character/object consistency), Generating new content in the style of the reference (style transfer), etc."
+        description="Optional; One or multiple IP character reference images. Pass a list of image_id here, e.g. ['im_jurheut7.png', 'im_hfuiut78.png']. Perfect for: Maintaining character consistency across expressions, Creating character variations and poses, Generating emoji packs with consistent style, Character evolution and redesign, Style transfer for character branding."
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
 
 
 @tool("generate_image_by_gpt_image_1_jaaz",
-      description="Generate an image by gpt image model using text prompt or optionally pass images for reference or for editing. Use this model if you need to use multiple input images as reference. Supports multiple providers with automatic fallback.",
+      description="Generate IP characters, emoji packs, and stickers using GPT image model. Perfect for creating consistent character designs across multiple expressions and poses. Use this tool when you need multiple input images as reference for character consistency. Ideal for emoji packs, character variations, and brand mascot creation.",
       args_schema=GenerateImageByGptImage1InputSchema)
 async def generate_image_by_gpt_image_1_jaaz(
     prompt: str,

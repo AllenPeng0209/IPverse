@@ -73,7 +73,7 @@ function Home() {
                 session_id: nanoid(),
                 text_model: configs.textModel,
                 tool_list: configs.toolList,
-                system_prompt: localStorage.getItem('system_prompt') || DEFAULT_SYSTEM_PROMPT,
+                system_prompt: DEFAULT_SYSTEM_PROMPT, // Force use new IP-focused system prompt
               })
             }}
             pending={isPending}

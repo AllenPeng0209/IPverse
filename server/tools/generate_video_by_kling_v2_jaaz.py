@@ -9,32 +9,32 @@ from .utils.image_utils import process_input_image
 
 class GenerateVideoByKlingV2InputSchema(BaseModel):
     prompt: str = Field(
-        description="Required. The prompt for video generation. Describe what you want to see in the video."
+        description="Required. The prompt for IP character animation. Describe the character movement, expression changes, or actions you want to see. Focus on simple, loopable animations perfect for social media and messaging apps."
     )
     negative_prompt: str = Field(
         default="",
-        description="Optional. Negative prompt to specify what you don't want in the video."
+        description="Optional. Negative prompt for character animation. Specify unwanted elements like: distorted character features, inconsistent style, complex backgrounds, etc."
     )
     guidance_scale: float = Field(
         default=0.5,
         description="Optional. Guidance scale for generation (0.0 to 1.0). Higher values follow the prompt more closely."
     )
     aspect_ratio: str = Field(
-        default="16:9",
-        description="Optional. The aspect ratio of the video. Allowed values: 1:1, 16:9, 4:3, 21:9"
+        default="1:1",
+        description="Optional. The aspect ratio for IP character animation. Allowed values: 1:1 (best for social media and stickers), 16:9 (for scenes), 4:3, 21:9. Default 1:1 for character focus."
     )
     duration: int = Field(
         default=5,
         description="Optional. The duration of the video in seconds. Use 5 by default. Allowed values: 5, 10."
     )
     input_images: list[str] = Field(
-        description="Required. Images to use as reference or starting frame. Pass a list of image_id here, e.g. ['im_jurheut7.png']. Only the first image will be used as start_image."
+        description="Required. IP character reference image to animate. Pass the character image_id here, e.g. ['im_jurheut7.png']. The character will be animated based on your prompt while maintaining visual consistency."
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
 
 
 @tool("generate_video_by_kling_v2_jaaz",
-      description="Generate high-quality videos using Kling V2.1 model. Supports image-to-video generation with advanced controls like negative prompts and guidance scale.",
+      description="Generate IP character animations and GIFs using Kling V2.1 model. Perfect for bringing your characters to life with smooth animations, expressions, and movements. Ideal for creating animated stickers, emoji GIFs, and social media content.",
       args_schema=GenerateVideoByKlingV2InputSchema)
 async def generate_video_by_kling_v2_jaaz(
     prompt: str,

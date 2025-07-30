@@ -7,9 +7,16 @@ import { toast } from 'sonner'
 import { DEFAULT_SYSTEM_PROMPT } from '@/constants'
 
 export default function AgentSettings() {
-  const [systemPrompt, setSystemPrompt] = useState(
-    localStorage.getItem('system_prompt') || DEFAULT_SYSTEM_PROMPT
-  )
+  const [systemPrompt, setSystemPrompt] = useState(() => {
+    // Check if localStorage has old non-IP system prompt and replace it
+    const saved = localStorage.getItem('system_prompt')
+    if (!saved || saved.includes('professional art design agent') || saved.includes('MUSE MODULAR')) {
+      // Clear old system prompt and use new IP-focused one
+      localStorage.setItem('system_prompt', DEFAULT_SYSTEM_PROMPT)
+      return DEFAULT_SYSTEM_PROMPT
+    }
+    return saved
+  })
 
   const handleSave = () => {
     localStorage.setItem('system_prompt', systemPrompt)

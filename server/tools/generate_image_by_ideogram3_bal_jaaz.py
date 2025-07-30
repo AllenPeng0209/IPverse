@@ -7,16 +7,16 @@ from tools.utils.image_generation_core import generate_image_with_provider
 
 class GenerateImageByIdeogram3InputSchema(BaseModel):
     prompt: str = Field(
-        description="Required. The prompt for image generation. If you want to edit an image, please describe what you want to edit in the prompt."
+        description="Required. The prompt for IP character creation. Be specific about character design, style, and visual elements. Perfect for creating new original characters from scratch."
     )
     aspect_ratio: str = Field(
-        description="Required. Aspect ratio of the image, only these values are allowed: 1:1, 16:9, 4:3, 3:4, 9:16. Choose the best fitting aspect ratio according to the prompt. Best ratio for posters is 3:4"
+        description="Required. Aspect ratio of the image, only these values are allowed: 1:1, 16:9, 4:3, 3:4, 9:16. For IP characters: use 1:1 for emoji/stickers, 3:4 for character sheets, 16:9 for promotional art."
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
 
 
 @tool("generate_image_by_ideogram3_bal_jaaz",
-      description="Generate an image by Ideogram 3 balanced model using text prompt. A good backup model for image generation if other models are not available. This model does NOT support input images for reference or editing.",
+      description="Create original IP characters using Ideogram 3 balanced model. Excellent for generating new character concepts from text descriptions. Perfect for initial character design and brainstorming. This model creates fresh designs without input images.",
       args_schema=GenerateImageByIdeogram3InputSchema)
 async def generate_image_by_ideogram3_bal_jaaz(
     prompt: str,

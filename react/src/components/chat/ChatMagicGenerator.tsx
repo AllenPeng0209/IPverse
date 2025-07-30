@@ -64,7 +64,7 @@ const ChatMagicGenerator: React.FC<ChatMagicGeneratorProps> = ({
                     sessionId: sessionId,
                     canvasId: canvasId,
                     newMessages: newMessages,
-                    systemPrompt: localStorage.getItem('system_prompt') || DEFAULT_SYSTEM_PROMPT,
+                    systemPrompt: DEFAULT_SYSTEM_PROMPT, // Force use new IP-focused system prompt
                 })
 
                 scrollToBottom()

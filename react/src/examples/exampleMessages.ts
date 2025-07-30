@@ -4,7 +4,7 @@ export const exampleMessages = [
     content: [
       {
         type: "text",
-        text: "Can u post this marketing article [AI Marketing Agent Copilot 👋](https://www.reddit.com/r/AI_Agents/comments/1kj8nbu/bulk_auto_ai_video_creator/) to Medium.com",
+        text: "Create a kawaii cat IP character with 20 different emoji expressions for a messaging app",
       },
     ],
   },
@@ -13,7 +13,7 @@ export const exampleMessages = [
     content: [
       {
         type: "text",
-        text: "Sure! I'm happy to help you post your marketing post to Medium. I'll open the browser to do it.",
+        text: "I'll create an adorable kawaii cat IP character with 20 unique emoji expressions perfect for messaging apps! Let me start by designing the character concept and style guide.",
       },
     ],
   },

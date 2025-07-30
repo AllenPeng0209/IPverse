@@ -565,8 +565,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         newMessages: data,
         textModel: configs.textModel,
         toolList: configs.toolList,
-        systemPrompt:
-          localStorage.getItem('system_prompt') || DEFAULT_SYSTEM_PROMPT,
+        systemPrompt: DEFAULT_SYSTEM_PROMPT, // Force use new IP-focused system prompt
       })
 
       if (searchSessionId !== sessionId) {
