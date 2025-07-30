@@ -24,10 +24,25 @@ print('Importing config_service')
 from services.config_service import config_service
 print('Importing tool_service')
 from services.tool_service import tool_service
+print('Importing db_adapter')
+from services.db_adapter import db_adapter
 
 async def initialize():
     print('Initializing config_service')
     await config_service.initialize()
+    
+    # Initialize database connection
+    print('Initializing database connection')
+    use_supabase = os.environ.get('USE_SUPABASE', 'false').lower() == 'true'
+    if use_supabase:
+        database_url = os.environ.get('SUPABASE_DATABASE_URL')
+        if database_url:
+            await db_adapter.initialize_supabase(database_url)
+        else:
+            print('⚠️ SUPABASE_DATABASE_URL not found in environment, using SQLite')
+    else:
+        print('📝 Using SQLite database (USE_SUPABASE=false)')
+    
     print('Initializing broadcast_init_done')
     await broadcast_init_done()
 

@@ -28,7 +28,7 @@ import os
 import shutil
 import httpx
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.settings_service import settings_service
 from services.tool_service import tool_service
 from services.knowledge_service import list_user_enabled_knowledge
@@ -252,7 +252,7 @@ async def create_workflow(request: CreateWorkflowRequest):
         api_json = json.dumps(request.api_json)
         inputs = json.dumps(request.inputs)
         outputs = json.dumps(request.outputs)
-        await db_service.create_comfy_workflow(name, api_json, request.description, inputs, outputs)
+        await db_adapter.create_comfy_workflow(name, api_json, request.description, inputs, outputs)
         await tool_service.initialize()
         return {"success": True}
     except Exception as e:
@@ -262,12 +262,12 @@ async def create_workflow(request: CreateWorkflowRequest):
 
 @router.get("/comfyui/list_workflows")
 async def list_workflows():
-    return await db_service.list_comfy_workflows()
+    return await db_adapter.list_comfy_workflows()
 
 
 @router.delete("/comfyui/delete_workflow/{id}")
 async def delete_workflow(id: int):
-    result = await db_service.delete_comfy_workflow(id)
+    result = await db_adapter.delete_comfy_workflow(id)
     await tool_service.initialize()
     return result
 

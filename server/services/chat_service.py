@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Optional
 
 # Import service modules
 from models.tool_model import ToolInfoJson
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.langgraph_service import langgraph_multi_agent
 from services.websocket_service import send_to_websocket
 from services.stream_service import add_stream_task, remove_stream_task
@@ -51,9 +51,9 @@ async def handle_chat(data: Dict[str, Any]) -> None:
         # create new session
         prompt = messages[0].get('content', '')
         # TODO: Better way to determin when to create new chat session.
-        await db_service.create_chat_session(session_id, text_model.get('model'), text_model.get('provider'), canvas_id, (prompt[:200] if isinstance(prompt, str) else ''))
+        await db_adapter.create_chat_session(session_id, text_model.get('model'), text_model.get('provider'), canvas_id, (prompt[:200] if isinstance(prompt, str) else ''))
 
-    await db_service.create_message(session_id, messages[-1].get('role', 'user'), json.dumps(messages[-1])) if len(messages) > 0 else None
+    await db_adapter.create_message(session_id, messages[-1].get('role', 'user'), json.dumps(messages[-1])) if len(messages) > 0 else None
 
     # Create and start langgraph_agent task for chat processing
     task = asyncio.create_task(langgraph_multi_agent(
