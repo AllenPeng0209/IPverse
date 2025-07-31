@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from starlette.types import Scope
 from starlette.responses import Response
 import socketio # type: ignore
+from fastapi.middleware.cors import CORSMiddleware
 print('Importing websocket_state')
 from services.websocket_state import sio
 print('Importing websocket_service')
@@ -59,6 +60,27 @@ async def lifespan(app: FastAPI):
 
 print('Creating FastAPI app')
 app = FastAPI(lifespan=lifespan)
+
+# Set up CORS middleware
+frontend_url = os.environ.get('FRONTEND_URL')
+origins = []
+if frontend_url:
+    origins.append(frontend_url)
+else:
+    # Default origins for development and production if FRONTEND_URL is not set
+    origins = [
+        "http://localhost:5174",
+        "https://ip-verse.vercel.app",
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Include routers
 print('Including routers')

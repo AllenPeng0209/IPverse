@@ -10,15 +10,14 @@ COPY ./server/requirements.txt /app/
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code into the container
+# Copy the entire server directory into the container at /app
 COPY ./server/ /app/
 
-# Make port 57988 available to the world outside this container
-# The port can be dynamically mapped by the cloud provider, but this is good practice.
-EXPOSE 57988
+# Make port available to the world outside this container
+EXPOSE 8080
 
-# Command to run the application
-# Use gunicorn to manage uvicorn workers for production.
-# Listen on 0.0.0.0 to be accessible from outside the container.
-# The port is passed via the $PORT environment variable, which Cloud Run provides.
+# Define environment variable to tell gunicorn where to serve
+ENV PORT 8080
+
+# Run main.py when the container launches
 CMD exec gunicorn --bind :$PORT --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 0 main:socket_app 
