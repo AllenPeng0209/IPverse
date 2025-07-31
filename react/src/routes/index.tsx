@@ -1,6 +1,7 @@
 import { createCanvas } from '@/api/canvas'
 import ChatTextarea from '@/components/chat/ChatTextarea'
 import CanvasList from '@/components/home/CanvasList'
+import IPRanking from '@/components/home/IPRanking'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useConfigs } from '@/contexts/configs'
 import { DEFAULT_SYSTEM_PROMPT } from '@/constants'
@@ -80,6 +81,7 @@ function Home() {
           />
         </div>
 
+        <IPRanking />
         <CanvasList />
       </ScrollArea>
     </div>

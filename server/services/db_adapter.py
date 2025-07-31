@@ -163,5 +163,41 @@ class DatabaseAdapter:
         else:
             return []
 
+    # IP Management Methods (Supabase only)
+    async def get_top_ips(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get top IPs by heat score"""
+        if self.use_supabase:
+            return await self.supabase_db.get_top_ips(limit)
+        else:
+            return []
+
+    async def get_ip_by_id(self, ip_id: int) -> Optional[Dict[str, Any]]:
+        """Get IP details by ID"""
+        if self.use_supabase:
+            return await self.supabase_db.get_ip_by_id(ip_id)
+        else:
+            return None
+
+    async def record_ip_interaction(self, ip_id: int, interaction_type: str, user_identifier: str = None):
+        """Record an IP interaction"""
+        if self.use_supabase:
+            return await self.supabase_db.record_ip_interaction(ip_id, interaction_type, user_identifier)
+        else:
+            print("IP interaction tracking not available in SQLite mode")
+
+    async def get_ip_categories(self) -> List[Dict[str, Any]]:
+        """Get all IP categories"""
+        if self.use_supabase:
+            return await self.supabase_db.get_ip_categories()
+        else:
+            return []
+
+    async def search_ips(self, query: str = None, category_id: int = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Search IPs"""
+        if self.use_supabase:
+            return await self.supabase_db.search_ips(query, category_id, limit)
+        else:
+            return []
+
 # Create a singleton instance
 db_adapter = DatabaseAdapter()

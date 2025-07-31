@@ -251,5 +251,90 @@ class SupabaseService:
             
             return images
 
+    # IP Management Methods
+    async def get_top_ips(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get top IPs by heat score"""
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch("""
+                SELECT 
+                    i.id, i.name, i.description, i.image_url, i.heat_score, 
+                    i.view_count, i.like_count, i.tags,
+                    c.name as category_name
+                FROM ips i
+                LEFT JOIN ip_categories c ON i.category_id = c.id
+                ORDER BY i.heat_score DESC
+                LIMIT $1
+            """, limit)
+            return [dict(row) for row in rows]
+
+    async def get_ip_by_id(self, ip_id: int) -> Optional[Dict[str, Any]]:
+        """Get IP details by ID"""
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow("""
+                SELECT 
+                    i.*, 
+                    c.name as category_name,
+                    c.description as category_description
+                FROM ips i
+                LEFT JOIN ip_categories c ON i.category_id = c.id
+                WHERE i.id = $1
+            """, ip_id)
+            return dict(row) if row else None
+
+    async def record_ip_interaction(self, ip_id: int, interaction_type: str, user_identifier: str = None):
+        """Record an IP interaction (view, like, share, comment)"""
+        async with self.pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO ip_interactions (ip_id, interaction_type, user_identifier)
+                VALUES ($1, $2, $3)
+            """, ip_id, interaction_type, user_identifier)
+
+    async def get_ip_categories(self) -> List[Dict[str, Any]]:
+        """Get all IP categories"""
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch("""
+                SELECT id, name, description, created_at, updated_at
+                FROM ip_categories
+                ORDER BY name
+            """)
+            return [dict(row) for row in rows]
+
+    async def search_ips(self, query: str = None, category_id: int = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Search IPs by name, description, or category"""
+        async with self.pool.acquire() as conn:
+            where_conditions = []
+            params = []
+            param_count = 0
+
+            if query:
+                param_count += 1
+                where_conditions.append(f"(i.name ILIKE ${param_count} OR i.description ILIKE ${param_count})")
+                params.append(f"%{query}%")
+
+            if category_id:
+                param_count += 1
+                where_conditions.append(f"i.category_id = ${param_count}")
+                params.append(category_id)
+
+            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+            
+            param_count += 1
+            params.append(limit)
+
+            query_sql = f"""
+                SELECT 
+                    i.id, i.name, i.description, i.image_url, i.heat_score, 
+                    i.view_count, i.like_count, i.tags,
+                    c.name as category_name
+                FROM ips i
+                LEFT JOIN ip_categories c ON i.category_id = c.id
+                {where_clause}
+                ORDER BY i.heat_score DESC
+                LIMIT ${param_count}
+            """
+            
+            rows = await conn.fetch(query_sql, *params)
+            return [dict(row) for row in rows]
+
 # Create a singleton instance - will be initialized in main.py
 supabase_service = SupabaseService()
