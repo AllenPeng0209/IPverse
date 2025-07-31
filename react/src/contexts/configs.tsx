@@ -1,7 +1,8 @@
-import { listModels, ModelInfo, ToolInfo } from '@/api/model'
+import { getPlatformModels } from '@/api/model'
 import useConfigsStore from '@/stores/configs'
+import { Model } from '@/types/types'
 import { useQuery } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 
 export const ConfigsContext = createContext<{
   configsStore: typeof useConfigsStore
@@ -17,18 +18,13 @@ export const ConfigsProvider = ({
   const {
     setTextModels,
     setTextModel,
-    setSelectedTools,
-    setAllTools,
     setShowLoginDialog,
   } = configsStore
 
-  // 存储上一次的 allTools 值，用于检测新添加的工具，并自动选中
-  const previousAllToolsRef = useRef<ModelInfo[]>([])
-
   const { data: modelList, refetch: refreshModels } = useQuery({
     queryKey: ['list_models_2'],
-    queryFn: () => listModels(),
-    staleTime: 1000, // 5分钟内数据被认为是新鲜的
+    queryFn: getPlatformModels,
+    staleTime: 1000 * 60 * 5, // 5分钟内数据被认为是新鲜的
     placeholderData: (previousData) => previousData, // 关键：显示旧数据同时获取新数据
     refetchOnWindowFocus: true, // 窗口获得焦点时重新获取
     refetchOnReconnect: true, // 网络重连时重新获取
@@ -37,53 +33,31 @@ export const ConfigsProvider = ({
 
   useEffect(() => {
     if (!modelList) return
-    const { llm: llmModels = [], tools: toolList = [] } = modelList
+    const llmModels: Model[] = Array.isArray(modelList) ? modelList : []
 
-    setTextModels(llmModels || [])
-    setAllTools(toolList || [])
+    setTextModels(llmModels)
 
     // 设置选择的文本模型
     const textModel = localStorage.getItem('text_model')
     if (
       textModel &&
-      llmModels.find((m) => m.provider + ':' + m.model === textModel)
+      llmModels.find((m: Model) => m.provider + ':' + m.model === textModel)
     ) {
       setTextModel(
-        llmModels.find((m) => m.provider + ':' + m.model === textModel)
+        llmModels.find((m: Model) => m.provider + ':' + m.model === textModel)
       )
     } else {
-      setTextModel(llmModels.find((m) => m.type === 'text'))
+      setTextModel(llmModels.find((m: any) => (m as any).type === 'text'))
     }
 
-    // 设置选中的工具模型
-    const disabledToolsJson = localStorage.getItem('disabled_tool_ids')
-    let currentSelectedTools: ToolInfo[] = []
-    // by default, all tools are selected
-    currentSelectedTools = toolList
-    if (disabledToolsJson) {
-      try {
-        const disabledToolIds: string[] = JSON.parse(disabledToolsJson)
-        // filter out disabled tools
-        currentSelectedTools = toolList.filter(
-          (t) => !disabledToolIds.includes(t.id)
-        )
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    setSelectedTools(currentSelectedTools)
-
-    // 如果文本模型或工具模型为空，则显示登录对话框
-    if (llmModels.length === 0 || toolList.length === 0) {
+    // 如果文本模型为空，则显示登录对话框
+    if (llmModels.length === 0) {
       setShowLoginDialog(true)
     }
   }, [
     modelList,
-    setSelectedTools,
     setTextModel,
     setTextModels,
-    setAllTools,
     setShowLoginDialog,
   ])
 

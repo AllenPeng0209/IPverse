@@ -1,4 +1,3 @@
-import { ModelInfo, ToolInfo } from '@/api/model'
 import { LLMConfig, Model } from '@/types/types'
 import { create } from 'zustand'
 
@@ -8,9 +7,6 @@ type ConfigsStore = {
 
   textModels: Model[]
   setTextModels: (models: Model[]) => void
-
-  selectedTools: ToolInfo[]
-  setSelectedTools: (models: ToolInfo[]) => void
 
   textModel?: Model
   setTextModel: (model?: Model) => void
@@ -26,9 +22,6 @@ type ConfigsStore = {
 
   showLoginDialog: boolean
   setShowLoginDialog: (show: boolean) => void
-
-  allTools: ToolInfo[]
-  setAllTools: (tools: ToolInfo[]) => void
 
   providers: {
     [key: string]: LLMConfig
@@ -60,12 +53,6 @@ const useConfigsStore = create<ConfigsStore>((set) => ({
 
   providers: {},
   setProviders: (providers) => set({ providers }),
-
-  allTools: [],
-  setAllTools: (tools) => set({ allTools: tools }),
-
-  selectedTools: [],
-  setSelectedTools: (tools) => set({ selectedTools: tools }),
 }))
 
 export default useConfigsStore

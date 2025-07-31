@@ -1,7 +1,9 @@
 import { LLMConfig } from '@/types/types'
 
-export async function getConfigExists(): Promise<{ exists: boolean }> {
-  const response = await fetch('/api/config/exists')
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+export async function checkConfigExists() {
+  const response = await fetch(`${API_BASE_URL}/api/config/exists`)
   return await response.json()
 }
 

@@ -2,6 +2,8 @@ import * as ISocket from '@/types/socket'
 import { io, Socket } from 'socket.io-client'
 import { eventBus } from './event'
 
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin
+
 export interface SocketConfig {
   serverUrl?: string
   autoConnect?: boolean
@@ -22,18 +24,18 @@ export class SocketIOManager {
 
   connect(serverUrl?: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const url = serverUrl || this.config.serverUrl
-
       if (this.socket) {
         this.socket.disconnect()
       }
 
+      const url = serverUrl || this.config.serverUrl || SOCKET_URL
       this.socket = io(url, {
         transports: ['websocket'],
         upgrade: false,
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
+        timeout: 10000,
       })
 
       this.socket.on('connect', () => {

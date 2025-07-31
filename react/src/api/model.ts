@@ -1,36 +1,10 @@
-export type ModelInfo = {
-  provider: string
-  model: string
-  type: 'text' | 'image' | 'tool' | 'video'
-  url: string
-}
+import { Model } from '@/types/types'
 
-export type ToolInfo = {
-  provider: string
-  id: string
-  display_name?: string | null
-  type?: 'image' | 'tool' | 'video'
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
-export async function listModels(): Promise<{
-  llm: ModelInfo[]
-  tools: ToolInfo[]
-}> {
-  const modelsResp = await fetch('/api/list_models')
-    .then((res) => res.json())
-    .catch((err) => {
-      console.error(err)
-      return []
-    })
-  const toolsResp = await fetch('/api/list_tools')
-    .then((res) => res.json())
-    .catch((err) => {
-      console.error(err)
-      return []
-    })
-
-  return {
-    llm: modelsResp,
-    tools: toolsResp,
-  }
+export const getPlatformModels = async (): Promise<Model[]> => {
+  const response = await fetch(`${API_BASE_URL}/api/list_models`)
+  const data = await response.json()
+  // The backend seems to return { models: [...] }, so we extract it.
+  return data.models || data
 }

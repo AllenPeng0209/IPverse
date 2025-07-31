@@ -190,6 +190,11 @@ export { readPNGMetadata, isPNGFile } from './utils/pngMetadata'
 // API
 export { sendMessages } from './api/chat'
 export { uploadImage } from './api/upload'
-export { listModels } from './api/model'
-export type { ModelInfo, ToolInfo } from './api/model'
-export { getCanvas, createCanvas, renameCanvas } from './api/canvas'
+export { getPlatformModels } from './api/model'
+export { getCanvas, createCanvas, renameCanvas, listCanvases } from './api/canvas'
+export {
+  getKnowledgeList,
+  getKnowledgeDetail,
+  updateKnowledge,
+  deleteKnowledge,
+} from './api/knowledge'
