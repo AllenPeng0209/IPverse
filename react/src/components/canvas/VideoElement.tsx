@@ -150,15 +150,15 @@ export const VideoElement: React.FC<VideoElementProps> = ({
             {isPaused && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/5">
                     <div className="bg-black/60 rounded-full p-3 flex items-center justify-center">
-                        <svg 
-                            width="24" 
-                            height="24" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
                             className="text-white"
                         >
-                            <polygon 
-                                points="9,6 9,18 21,12" 
+                            <polygon
+                                points="9,6 9,18 21,12"
                                 fill="currentColor"
                             />
                         </svg>
@@ -330,7 +330,7 @@ export const CanvasVideoElement: React.FC<{
                     isPreview={false}
                     muted={true}
                     autoPlay={false}
-                    onClick={(e) => {
+                    onClick={() => {
                         console.log('🎬 VideoElement clicked')
                         // Don't call onSelect again - already handled by parent div
                     }}

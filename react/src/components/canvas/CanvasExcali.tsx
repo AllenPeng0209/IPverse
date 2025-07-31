@@ -55,7 +55,7 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
     if (!appState) return
 
     // Check if any selected element is embeddable type
-    const selectedElements = elements.filter((element) => 
+    const selectedElements = elements.filter((element) =>
       appState.selectedElementIds[element.id]
     )
     const hasEmbeddableSelected = selectedElements.some(
@@ -130,11 +130,11 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
 
   // 添加自定义类名以便应用我们的CSS修复
   const excalidrawClassName = `excalidraw-custom ${theme === 'dark' ? 'excalidraw-dark-fix' : ''}`
-  
+
   // 在深色模式下使用自定义主题设置，避免使用默认的滤镜
   // 这样可以确保颜色在深色模式下正确显示
   const customTheme = theme === 'dark' ? 'light' : theme
-  
+
   // 在组件挂载和主题变化时设置深色模式下的背景色
   useEffect(() => {
     if (excalidrawAPI && theme === 'dark') {
@@ -142,7 +142,6 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
       excalidrawAPI.updateScene({
         appState: {
           viewBackgroundColor: '#121212',
-          gridColor: 'rgba(255, 255, 255, 0.1)',
         }
       })
     } else if (excalidrawAPI && theme === 'light') {
@@ -150,7 +149,6 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
       excalidrawAPI.updateScene({
         appState: {
           viewBackgroundColor: '#ffffff',
-          gridColor: 'rgba(0, 0, 0, 0.1)',
         }
       })
     }
@@ -401,7 +399,6 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
     <Excalidraw
       theme={customTheme as Theme}
       langCode={i18n.language}
-      className={excalidrawClassName}
       excalidrawAPI={(api) => {
         setExcalidrawAPI(api)
       }}

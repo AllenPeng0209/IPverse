@@ -63,8 +63,11 @@ const CommonDialogContent: React.FC<CommonDialogProps> = ({
                   'grid rounded-lg p-4 min-w-[300px] w-full max-w-lg gap-4 border bg-background shadow-lg sm:rounded-lg',
                   className
                 )}
+                // @ts-ignore
                 initial={initialState}
+                // @ts-ignore
                 animate={openState}
+                // @ts-ignore
                 exit={initialState}
                 style={{ transformPerspective }}
               >
