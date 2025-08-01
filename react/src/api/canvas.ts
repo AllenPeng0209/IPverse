@@ -10,9 +10,17 @@ export type ListCanvasesResponse = {
   created_at: string
 }
 
-export async function listCanvases(): Promise<{ id: string; name: string }[]> {
+export async function listCanvases(): Promise<ListCanvasesResponse[]> {
   const response = await fetch(`${API_BASE_URL}/api/canvas/list`)
-  return await response.json()
+  const data = await response.json()
+  // Convert the response to match ListCanvasesResponse format
+  return data.map((canvas: any) => ({
+    id: canvas.id,
+    name: canvas.name,
+    description: canvas.description,
+    thumbnail: canvas.thumbnail,
+    created_at: canvas.created_at || new Date().toISOString()
+  }))
 }
 
 export async function createCanvas(data: {

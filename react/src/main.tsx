@@ -5,20 +5,32 @@ import App from './App'
 import { PostHogProvider } from 'posthog-js/react'
 import '@/assets/style/index.css'
 
+const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY
+const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST
+
 const options = {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+  api_host: posthogHost,
 }
 
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
+  
+  const AppWithProviders = () => (
+    <SocketProvider>
+      <App />
+    </SocketProvider>
+  )
+  
   root.render(
     <StrictMode>
-      <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY} options={options}>
-        <SocketProvider>
-          <App />
-        </SocketProvider>
-      </PostHogProvider>
+      {posthogKey ? (
+        <PostHogProvider apiKey={posthogKey} options={options}>
+          <AppWithProviders />
+        </PostHogProvider>
+      ) : (
+        <AppWithProviders />
+      )}
     </StrictMode>
   )
 }

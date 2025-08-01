@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from fastapi import APIRouter
 import requests
 import httpx
@@ -6,6 +7,7 @@ from models.tool_model import ToolInfoJson
 from services.tool_service import tool_service
 from services.config_service import config_service
 from services.db_service import db_service
+from services.db_adapter import db_adapter
 from utils.http_client import HttpClient
 # services
 from models.config_model import ModelInfo
@@ -138,3 +140,25 @@ async def list_chat_sessions():
 @router.get("/chat_session/{session_id}")
 async def get_chat_session(session_id: str):
     return await db_service.get_chat_history(session_id)
+
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for cloud deployment"""
+    try:
+        is_cloud = os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+        db_status = "supabase" if db_adapter.use_supabase else "sqlite"
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "database": db_status,
+            "cloud_deployment": is_cloud,
+            "environment": "production" if is_cloud else "development"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }

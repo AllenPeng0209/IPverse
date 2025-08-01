@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 export async function uploadImage(
   file: File,
   onProgress?: (progress: number) => void
-): Promise<{ url: string }> {
+): Promise<{ file_id?: string; url: string; width?: number; height?: number }> {
   const formData = new FormData()
   formData.append('file', file)
 

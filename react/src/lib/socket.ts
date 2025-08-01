@@ -2,7 +2,13 @@ import * as ISocket from '@/types/socket'
 import { io, Socket } from 'socket.io-client'
 import { eventBus } from './event'
 
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+
+console.log('🔧 Socket Debug:', {
+  'import.meta.env.VITE_API_BASE_URL': import.meta.env.VITE_API_BASE_URL,
+  'window.location.origin': window.location.origin,
+  'SOCKET_URL': SOCKET_URL
+})
 
 export interface SocketConfig {
   serverUrl?: string

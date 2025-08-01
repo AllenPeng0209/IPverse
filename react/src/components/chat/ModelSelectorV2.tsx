@@ -84,10 +84,11 @@ const ModelSelector: React.FC = () => {
   const groupModelsByProvider = (models: typeof allTools) => {
     const grouped: { [provider: string]: typeof allTools } = {}
     models?.forEach((model) => {
-      if (!grouped[model.provider]) {
-        grouped[model.provider] = []
+      const provider = model.provider || 'unknown'
+      if (!grouped[provider]) {
+        grouped[provider] = []
       }
-      grouped[model.provider].push(model)
+      grouped[provider].push(model)
     })
     return grouped
   }

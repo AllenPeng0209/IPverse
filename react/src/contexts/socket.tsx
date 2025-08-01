@@ -40,12 +40,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
         // Create socket manager instance if not exists
         if (!socketManagerRef.current) {
+          // Use environment variable or fallback to backend URL
+          const socketUrl = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+          
           socketManagerRef.current = new SocketIOManager({
-            serverUrl: process.env.NODE_ENV === 'development'
-              ? 'http://localhost:57988'
-              : window.location.origin,
+            serverUrl: socketUrl,
             autoConnect: false
           })
+          
+          console.log('🔧 Socket Manager created with URL:', socketUrl)
         }
 
         const socketManager = socketManagerRef.current

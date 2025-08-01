@@ -63,11 +63,23 @@ DEFAULT_PROVIDERS_CONFIG: AppConfig = {
 }
 
 SERVER_DIR = os.path.dirname(os.path.dirname(__file__))
-USER_DATA_DIR = os.getenv(
-    "USER_DATA_DIR",
-    os.path.join(SERVER_DIR, "user_data"),
-)
-FILES_DIR = os.path.join(USER_DATA_DIR, "files")
+
+# Cloud-compatible directory configuration
+if os.getenv("CLOUD_DEPLOYMENT", "false").lower() == "true":
+    # Use container-friendly paths in cloud deployment
+    USER_DATA_DIR = os.getenv("USER_DATA_DIR", "/app/data")
+    FILES_DIR = os.getenv("FILES_DIR", "/app/data/files")
+    
+    # Ensure directories exist
+    os.makedirs(USER_DATA_DIR, exist_ok=True)
+    os.makedirs(FILES_DIR, exist_ok=True)
+else:
+    # Local development paths
+    USER_DATA_DIR = os.getenv(
+        "USER_DATA_DIR",
+        os.path.join(SERVER_DIR, "user_data"),
+    )
+    FILES_DIR = os.path.join(USER_DATA_DIR, "files")
 
 
 IMAGE_FORMATS = (

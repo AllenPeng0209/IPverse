@@ -1,4 +1,5 @@
 import { LLMConfig, Model } from '@/types/types'
+import { ToolInfo } from '@/api/model'
 import { create } from 'zustand'
 
 type ConfigsStore = {
@@ -10,6 +11,12 @@ type ConfigsStore = {
 
   textModel?: Model
   setTextModel: (model?: Model) => void
+
+  selectedTools: ToolInfo[]
+  setSelectedTools: (tools: ToolInfo[]) => void
+
+  allTools: ToolInfo[]
+  setAllTools: (tools: ToolInfo[]) => void
 
   showInstallDialog: boolean
   setShowInstallDialog: (show: boolean) => void
@@ -38,6 +45,12 @@ const useConfigsStore = create<ConfigsStore>((set) => ({
 
   textModel: undefined,
   setTextModel: (model) => set({ textModel: model }),
+
+  selectedTools: [],
+  setSelectedTools: (tools) => set({ selectedTools: tools }),
+
+  allTools: [],
+  setAllTools: (tools) => set({ allTools: tools }),
 
   showInstallDialog: false,
   setShowInstallDialog: (show) => set({ showInstallDialog: show }),

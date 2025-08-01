@@ -34,15 +34,23 @@ async def initialize():
     
     # Initialize database connection
     print('Initializing database connection')
-    use_supabase = os.environ.get('USE_SUPABASE', 'false').lower() == 'true'
+    
+    # Force Supabase in cloud deployment
+    is_cloud_deployment = os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+    use_supabase = os.environ.get('USE_SUPABASE', 'false').lower() == 'true' or is_cloud_deployment
+    
     if use_supabase:
         database_url = os.environ.get('SUPABASE_DATABASE_URL')
         if database_url:
+            print('🗄️ Using Supabase database')
             await db_adapter.initialize_supabase(database_url)
         else:
-            print('⚠️ SUPABASE_DATABASE_URL not found in environment, using SQLite')
+            if is_cloud_deployment:
+                raise ValueError("SUPABASE_DATABASE_URL is required for cloud deployment")
+            else:
+                print('⚠️ SUPABASE_DATABASE_URL not found, using SQLite')
     else:
-        print('📝 Using SQLite database (USE_SUPABASE=false)')
+        print('📝 Using SQLite database (development mode)')
     
     print('Initializing broadcast_init_done')
     await broadcast_init_done()
@@ -71,6 +79,13 @@ else:
     origins = [
         "http://localhost:5174",
         "https://ip-verse.vercel.app",
+        "https://react-phi-ruddy.vercel.app",
+        "https://react-jd9gq4ouw-allenpeng0209s-projects.vercel.app",
+        "https://react-iooq19ttr-allenpeng0209s-projects.vercel.app",
+        "https://react-qi3ync38f-allenpeng0209s-projects.vercel.app",
+        "https://react-nies2uj94-allenpeng0209s-projects.vercel.app",
+        "https://react-kcstmpwr3-allenpeng0209s-projects.vercel.app",
+        "https://ip-verse-642j65rve-allenpeng0209s-projects.vercel.app",
     ]
 
 app.add_middleware(
@@ -106,10 +121,13 @@ if __name__ == "__main__":
         sorted(_bypass | current - {""}))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=57988,
+    # Cloud Run provides PORT environment variable
+    default_port = int(os.environ.get('PORT', 57988))
+    parser.add_argument('--port', type=int, default=default_port,
                         help='Port to run the server on')
     args = parser.parse_args()
     import uvicorn
     print("🌟Starting server, UI_DIST_DIR:", os.environ.get('UI_DIST_DIR'))
+    print(f"🌟Server will run on host: 0.0.0.0, port: {args.port}")
 
-    uvicorn.run(socket_app, host="127.0.0.1", port=args.port)
+    uvicorn.run(socket_app, host="0.0.0.0", port=args.port)

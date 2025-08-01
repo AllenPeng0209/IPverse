@@ -117,9 +117,9 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
       setImages((prev) => [
         ...prev,
         {
-          file_id: data.file_id,
-          width: data.width,
-          height: data.height,
+          file_id: data.file_id || data.url,
+          width: data.width || 0,
+          height: data.height || 0,
         },
       ])
     },
