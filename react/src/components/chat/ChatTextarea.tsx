@@ -480,7 +480,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
             <PlusIcon className="size-4" />
           </Button>
 
-          <ModelSelectorV2 />
+          <ModelSelectorV3 />
 
           {/* Aspect Ratio Selector */}
           <DropdownMenu>

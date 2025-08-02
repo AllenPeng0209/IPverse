@@ -27,7 +27,17 @@ const ModelSelectorV3: React.FC<ModelSelectorV3Props> = ({
     textModel,
     setTextModel,
     textModels,
+    selectedTools,
+    setSelectedTools,
+    allTools,
   } = useConfigs()
+
+  // 調試信息
+  console.log('🎨 ModelSelectorV3 Debug:', {
+    allToolsLength: allTools?.length || 0,
+    selectedToolsLength: selectedTools?.length || 0,
+    textModelsLength: textModels?.length || 0
+  })
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { t } = useTranslation()
@@ -54,6 +64,24 @@ const ModelSelectorV3: React.FC<ModelSelectorV3Props> = ({
 
   const groupedLLMs = sortProviders(groupLLMsByProvider(textModels))
 
+  // 工具分組邏輯
+  const groupToolsByProvider = (tools: any[]) => {
+    const grouped: { [provider: string]: any[] } = {}
+    tools?.forEach((tool) => {
+      const provider = tool.provider || 'unknown'
+      if (!grouped[provider]) {
+        grouped[provider] = []
+      }
+      grouped[provider].push(tool)
+    })
+    return grouped
+  }
+
+  const groupedTools = sortProviders(groupToolsByProvider(allTools))
+  const selectedToolKeys = selectedTools.map(
+    (tool) => tool.provider + ':' + tool.id
+  )
+
   const handleModelClick = (modelKey: string) => {
     const model = textModels?.find((m) => m.provider + ':' + m.model === modelKey)
     if (model) {
@@ -65,6 +93,29 @@ const ModelSelectorV3: React.FC<ModelSelectorV3Props> = ({
 
   const isModelSelected = (modelKey: string) => {
     return textModel?.provider + ':' + textModel?.model === modelKey
+  }
+
+  // 工具選擇處理
+  const handleToolToggle = (toolKey: string, checked: boolean) => {
+    const tool = allTools.find((t) => t.provider + ':' + t.id === toolKey)
+    if (!tool) return
+
+    let newSelected: any[] = []
+    if (checked) {
+      newSelected = [...selectedTools, tool]
+    } else {
+      newSelected = selectedTools.filter(
+        (t) => t.provider + ':' + t.id !== toolKey
+      )
+    }
+
+    setSelectedTools(newSelected)
+    localStorage.setItem(
+      'disabled_tool_ids',
+      JSON.stringify(
+        allTools.filter((t) => !newSelected.includes(t)).map((t) => t.id)
+      )
+    )
   }
 
   const getProviderDisplayInfo = (provider: string) => {
@@ -93,45 +144,98 @@ const ModelSelectorV3: React.FC<ModelSelectorV3Props> = ({
         </div>
         <ScrollArea>
           <div className="max-h-80 h-80 px-4 pb-4 select-none">
-            {Object.entries(groupedLLMs).map(([provider, providerModels], index, array) => {
-              const providerInfo = getProviderDisplayInfo(provider)
-              const isLastGroup = index === array.length - 1
-              return (
-                <DropdownMenuGroup key={provider}>
-                  <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-0 py-2">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={providerInfo.icon}
-                        alt={providerInfo.name}
-                        className="w-4 h-4 rounded-full"
-                      />
-                      {providerInfo.name}
-                    </div>
-                  </DropdownMenuLabel>
-                  {providerModels.map((model: Model) => {
-                    const modelKey = model.provider + ':' + model.model
-                    const modelName = model.model
-
-                    return (
-                      <div
-                        key={modelKey}
-                        className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors mb-2 cursor-pointer"
-                        onClick={() => handleModelClick(modelKey)}
-                      >
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{modelName}</div>
-                        </div>
-                        <Checkbox
-                          checked={isModelSelected(modelKey)}
-                          className="ml-4"
+            {/* 文本模型部分 */}
+            <div className="mb-4">
+              <div className="text-sm font-medium text-muted-foreground mb-2">文本模型</div>
+              {Object.entries(groupedLLMs).map(([provider, providerModels], index, array) => {
+                const providerInfo = getProviderDisplayInfo(provider)
+                const isLastGroup = index === array.length - 1
+                return (
+                  <DropdownMenuGroup key={provider}>
+                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-0 py-2">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={providerInfo.icon}
+                          alt={providerInfo.name}
+                          className="w-4 h-4 rounded-full"
                         />
+                        {providerInfo.name}
                       </div>
-                    )
-                  })}
-                  {!isLastGroup && <DropdownMenuSeparator className="my-2" />}
-                </DropdownMenuGroup>
-              )
-            })}
+                    </DropdownMenuLabel>
+                    {providerModels.map((model: Model) => {
+                      const modelKey = model.provider + ':' + model.model
+                      const modelName = model.model
+
+                      return (
+                        <div
+                          key={modelKey}
+                          className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors mb-2 cursor-pointer"
+                          onClick={() => handleModelClick(modelKey)}
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{modelName}</div>
+                          </div>
+                          <Checkbox
+                            checked={isModelSelected(modelKey)}
+                            className="ml-4"
+                          />
+                        </div>
+                      )
+                    })}
+                    {!isLastGroup && <DropdownMenuSeparator className="my-2" />}
+                  </DropdownMenuGroup>
+                )
+              })}
+            </div>
+
+            {/* 工具模型部分 */}
+            {Object.keys(groupedTools).length > 0 && (
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-2">圖像/視頻模型</div>
+                {Object.entries(groupedTools).map(([provider, providerTools], index, array) => {
+                  const providerInfo = getProviderDisplayInfo(provider)
+                  const isLastGroup = index === array.length - 1
+                  return (
+                    <DropdownMenuGroup key={provider}>
+                      <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-0 py-2">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={providerInfo.icon}
+                            alt={providerInfo.name}
+                            className="w-4 h-4 rounded-full"
+                          />
+                          {providerInfo.name}
+                        </div>
+                      </DropdownMenuLabel>
+                      {providerTools.map((tool: any) => {
+                        const toolKey = tool.provider + ':' + tool.id
+                        const isToolSelected = selectedToolKeys.includes(toolKey)
+
+                        return (
+                          <div
+                            key={toolKey}
+                            className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors mb-2 cursor-pointer"
+                            onClick={() => handleToolToggle(toolKey, !isToolSelected)}
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">
+                                {tool.type === 'video' ? '🎬 ' : '🎨 '}
+                                {tool.display_name || tool.id}
+                              </div>
+                            </div>
+                            <Checkbox
+                              checked={isToolSelected}
+                              className="ml-4"
+                            />
+                          </div>
+                        )
+                      })}
+                      {!isLastGroup && <DropdownMenuSeparator className="my-2" />}
+                    </DropdownMenuGroup>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </ScrollArea>
       </DropdownMenuContent>
