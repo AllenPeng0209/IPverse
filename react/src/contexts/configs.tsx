@@ -33,15 +33,25 @@ export const ConfigsProvider = ({
     refetchOnMount: true, // 挂载时重新获取
   })
 
-  const { data: toolsList } = useQuery({
+  const { data: toolsList, error: toolsError, isLoading: toolsLoading } = useQuery({
     queryKey: ['list_tools'],
     queryFn: getPlatformTools,
-    staleTime: 1000 * 60 * 5, // 5分钟内数据被认为是新鲜的
+    staleTime: 0, // 強制每次都重新獲取
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     refetchOnMount: true,
   })
+
+  // 調試信息
+  useEffect(() => {
+    console.log('🔧 Tools Query Debug:', {
+      toolsList,
+      toolsError,
+      toolsLoading,
+      toolsListLength: toolsList?.length || 0
+    })
+  }, [toolsList, toolsError, toolsLoading])
 
   useEffect(() => {
     if (!modelList) return
@@ -77,6 +87,7 @@ export const ConfigsProvider = ({
     if (!toolsList) return
     const tools = Array.isArray(toolsList) ? toolsList : []
 
+    console.log('🛠️ Setting allTools:', tools)
     setAllTools(tools)
 
     // 设置默认选择的工具（从本地存储恢复或选择默认工具）
