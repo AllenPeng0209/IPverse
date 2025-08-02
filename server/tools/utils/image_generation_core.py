@@ -94,4 +94,4 @@ async def generate_image_with_provider(
         session_id, canvas_id, filename, mime_type, width, height
     )
 
-    return f"image generated successfully ![image_id: {filename}](http://localhost:{DEFAULT_PORT}{image_url})"
+    return f"image generated successfully ![image_id: {filename}]({image_url})"

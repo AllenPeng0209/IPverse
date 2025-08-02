@@ -134,7 +134,7 @@ async def generate_image_by_midjourney_jaaz(
         image_links: List[str] = []
         for saved_image in saved_images:
             image_links.append(
-                f"![image_{saved_image['index']+1}: {saved_image['image_id']}](http://localhost:{DEFAULT_PORT}{saved_image['url']})"
+                f"![image_{saved_image['index']+1}: {saved_image['image_id']}]({saved_image['url']})"
             )
 
         result_message = f"Midjourney generated {len(saved_images)} images successfully:\n\n" + "\n\n".join(image_links)

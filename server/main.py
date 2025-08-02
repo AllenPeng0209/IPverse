@@ -27,6 +27,8 @@ print('Importing tool_service')
 from services.tool_service import tool_service
 print('Importing db_adapter')
 from services.db_adapter import db_adapter
+print('Importing supabase_storage')
+from services.supabase_storage_service import supabase_storage
 
 async def initialize():
     print('Initializing config_service')
@@ -44,6 +46,17 @@ async def initialize():
         if database_url:
             print('🗄️ Using Supabase database')
             await db_adapter.initialize_supabase(database_url)
+            
+            # Initialize Supabase Storage
+            supabase_url = os.environ.get('SUPABASE_URL')
+            supabase_key = os.environ.get('SUPABASE_ANON_KEY')
+            
+            if supabase_url and supabase_key:
+                print('📁 Initializing Supabase Storage')
+                supabase_storage.initialize(supabase_url, supabase_key, "images")
+                await supabase_storage.create_bucket_if_not_exists()
+            else:
+                print('⚠️ SUPABASE_URL or SUPABASE_ANON_KEY not found, Storage disabled')
         else:
             if is_cloud_deployment:
                 raise ValueError("SUPABASE_DATABASE_URL is required for cloud deployment")

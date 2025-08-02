@@ -21,3 +21,4 @@ user_data/
 
 .env
 .vercel
+deploy.sh

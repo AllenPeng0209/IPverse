@@ -13,6 +13,7 @@ from nanoid import generate
 from services.db_service import db_service
 from services.websocket_service import broadcast_session_update
 from services.websocket_service import send_to_websocket
+from services.supabase_storage_service import supabase_storage
 from utils.canvas import find_next_best_element_position
 
 def generate_file_id() -> str:
@@ -93,6 +94,8 @@ async def generate_new_image_element(
 
 async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, mime_type: str, width: int, height: int) -> str:
     """Save image to canvas with proper locking and positioning"""
+    from services.config_service import FILES_DIR
+    
     # Use lock to ensure atomicity of the save process
     async with canvas_lock_manager.lock_canvas(canvas_id):
         # Fetch canvas data once inside the lock
@@ -108,7 +111,41 @@ async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, m
             canvas_data['files'] = {}
 
         file_id = generate_file_id()
-        url = f'/api/file/{filename}'
+        
+        # Try to upload to Supabase Storage if available
+        if supabase_storage.initialized:
+            try:
+                # Local file path
+                local_file_path = os.path.join(FILES_DIR, filename)
+                
+                # Storage path in Supabase (organize by canvas)
+                storage_path = f"canvas/{canvas_id}/{filename}"
+                
+                # Upload to Supabase Storage
+                public_url = await supabase_storage.upload_file(local_file_path, storage_path)
+                
+                # Use Supabase URL
+                url = public_url
+                image_url = public_url
+                
+                print(f"✅ Image uploaded to Supabase Storage: {public_url}")
+                
+                # Optionally remove local file to save space
+                try:
+                    os.remove(local_file_path)
+                    print(f"🗑️ Removed local file: {local_file_path}")
+                except Exception as e:
+                    print(f"⚠️ Could not remove local file: {e}")
+                    
+            except Exception as e:
+                print(f"❌ Failed to upload to Supabase Storage: {e}")
+                # Fallback to local URL
+                url = f'/api/file/{filename}'
+                image_url = f"/api/file/{filename}"
+        else:
+            # Fallback to local URL if Supabase Storage not available
+            url = f'/api/file/{filename}'
+            image_url = f"/api/file/{filename}"
 
         file_data: Dict[str, Any] = {
             'mimeType': mime_type,
@@ -131,8 +168,6 @@ async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, m
         elements_list = cast(List[Dict[str, Any]], canvas_data['elements'])
         elements_list.append(new_image_element)
         canvas_data['files'][file_id] = file_data
-
-        image_url = f"/api/file/{filename}"
 
         # Save the updated canvas data back to the database
         await db_service.save_canvas_data(canvas_id, json.dumps(canvas_data))

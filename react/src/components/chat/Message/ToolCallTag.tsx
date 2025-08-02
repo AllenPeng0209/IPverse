@@ -50,22 +50,67 @@ const ToolCallTag: React.FC<ToolCallTagProps> = ({
   const needsConfirmation = requiresConfirmation
 
   let parsedArgs = null
-  try {
-    parsedArgs = JSON.parse(inputs)
-  } catch (error) {
-    console.error('Error parsing args:', error, 'Raw input:', inputs)
-    // 尝试清理输入字符串，移除可能的额外内容
-    try {
-      const cleanedInput = inputs.trim()
-      const jsonEndIndex = cleanedInput.lastIndexOf('}')
-      if (jsonEndIndex > 0) {
-        const jsonPart = cleanedInput.substring(0, jsonEndIndex + 1)
-        parsedArgs = JSON.parse(jsonPart)
-        console.log('Successfully parsed cleaned JSON:', jsonPart)
+
+  // Early return for empty or invalid inputs
+  if (!inputs || typeof inputs !== 'string' || inputs.trim().length === 0) {
+    return null
+  }
+
+  const trimmedInput = inputs.trim()
+
+  // Check if input looks like it could be JSON
+  if (!trimmedInput.startsWith('{')) {
+    return null
+  }
+
+  // Helper function to check if JSON string is potentially complete
+  const isJsonPotentiallyComplete = (str: string): boolean => {
+    let braceCount = 0
+    let inString = false
+    let escaped = false
+
+    for (let i = 0; i < str.length; i++) {
+      const char = str[i]
+
+      if (escaped) {
+        escaped = false
+        continue
       }
-    } catch (cleanError) {
-      console.error('Failed to parse even after cleaning:', cleanError)
+
+      if (char === '\\') {
+        escaped = true
+        continue
+      }
+
+      if (char === '"') {
+        inString = !inString
+        continue
+      }
+
+      if (!inString) {
+        if (char === '{') braceCount++
+        if (char === '}') braceCount--
+      }
     }
+
+    return braceCount === 0 && !inString
+  }
+
+  // Only proceed if JSON appears to be complete
+  if (!isJsonPotentiallyComplete(trimmedInput)) {
+    // JSON is still streaming, don't show errors
+    return null
+  }
+
+  try {
+    parsedArgs = JSON.parse(trimmedInput)
+  } catch (error) {
+    // Silently handle incomplete JSON during streaming
+    // Only log actual parsing errors for complete JSON
+    if (isJsonPotentiallyComplete(trimmedInput)) {
+      console.warn('Failed to parse complete JSON:', error instanceof Error ? error.message : String(error))
+    }
+    return null
   }
 
   // 普通模式的样式
