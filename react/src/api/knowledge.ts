@@ -1,6 +1,6 @@
 import { authenticatedFetch } from './auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
 
 // 知识库基本信息接口
 export const getKnowledgeList = async (): Promise<string[]> => {

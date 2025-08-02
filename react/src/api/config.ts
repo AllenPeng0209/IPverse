@@ -1,6 +1,6 @@
 import { LLMConfig } from '@/types/types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
 
 export async function checkConfigExists() {
   const response = await fetch(`${API_BASE_URL}/api/config/exists`)

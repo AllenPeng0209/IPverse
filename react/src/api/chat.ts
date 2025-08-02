@@ -1,7 +1,7 @@
 import { Message, Model } from '@/types/types'
 import { ModelInfo, ToolInfo } from './model'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
 
 export const getChatSession = async (sessionId: string) => {
   const response = await fetch(`${API_BASE_URL}/api/chat_session/${sessionId}`)
