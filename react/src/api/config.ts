@@ -8,14 +8,14 @@ export async function checkConfigExists() {
 }
 
 export async function getConfig(): Promise<{ [key: string]: LLMConfig }> {
-  const response = await fetch('/api/config')
+  const response = await fetch(`${API_BASE_URL}/api/config`)
   return await response.json()
 }
 
 export async function updateConfig(config: {
   [key: string]: LLMConfig
 }): Promise<{ status: string; message: string }> {
-  const response = await fetch('/api/config', {
+  const response = await fetch(`${API_BASE_URL}/api/config`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

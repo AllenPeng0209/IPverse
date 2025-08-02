@@ -1,8 +1,10 @@
 import { Message, Model } from '@/types/types'
 import { ModelInfo, ToolInfo } from './model'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
 export const getChatSession = async (sessionId: string) => {
-  const response = await fetch(`/api/chat_session/${sessionId}`)
+  const response = await fetch(`${API_BASE_URL}/api/chat_session/${sessionId}`)
   const data = await response.json()
   return data as Message[]
 }
@@ -15,7 +17,7 @@ export const sendMessages = async (payload: {
   toolList: ToolInfo[]
   systemPrompt: string | null
 }) => {
-  const response = await fetch(`/api/chat`, {
+  const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -34,7 +36,7 @@ export const sendMessages = async (payload: {
 }
 
 export const cancelChat = async (sessionId: string) => {
-  const response = await fetch(`/api/cancel/${sessionId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/cancel/${sessionId}`, {
     method: 'POST',
   })
   return await response.json()
