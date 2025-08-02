@@ -49,14 +49,21 @@ async def initialize():
             
             # Initialize Supabase Storage
             supabase_url = os.environ.get('SUPABASE_URL')
-            supabase_key = os.environ.get('SUPABASE_ANON_KEY')
+            # Try Service Role Key first, fallback to Anon Key
+            supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or os.environ.get('SUPABASE_ANON_KEY')
             
             if supabase_url and supabase_key:
                 print('📁 Initializing Supabase Storage')
+                key_type = "Service Role" if os.environ.get('SUPABASE_SERVICE_ROLE_KEY') else "Anon"
+                print(f'🔑 Using {key_type} key for Storage operations')
                 supabase_storage.initialize(supabase_url, supabase_key, "images")
-                await supabase_storage.create_bucket_if_not_exists()
+                # Only try to create bucket if using Service Role key
+                if os.environ.get('SUPABASE_SERVICE_ROLE_KEY'):
+                    await supabase_storage.create_bucket_if_not_exists()
+                else:
+                    print('📦 Using existing Storage bucket (Anon key cannot create buckets)')
             else:
-                print('⚠️ SUPABASE_URL or SUPABASE_ANON_KEY not found, Storage disabled')
+                print('⚠️ SUPABASE_URL or SUPABASE keys not found, Storage disabled')
         else:
             if is_cloud_deployment:
                 raise ValueError("SUPABASE_DATABASE_URL is required for cloud deployment")

@@ -4,6 +4,7 @@ Handles canvas operations, locking, and notifications
 """
 
 import asyncio
+import os
 import random
 import time
 import json
@@ -140,12 +141,15 @@ async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, m
             except Exception as e:
                 print(f"❌ Failed to upload to Supabase Storage: {e}")
                 # Fallback to local URL
-                url = f'/api/file/{filename}'
-                image_url = f"/api/file/{filename}"
+                backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8080')
+                url = f'{backend_url}/api/file/{filename}'
+                image_url = f"{backend_url}/api/file/{filename}"
         else:
             # Fallback to local URL if Supabase Storage not available
-            url = f'/api/file/{filename}'
-            image_url = f"/api/file/{filename}"
+            # Use full backend URL for cross-origin deployments
+            backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8080')
+            url = f'{backend_url}/api/file/{filename}'
+            image_url = f"{backend_url}/api/file/{filename}"
 
         file_data: Dict[str, Any] = {
             'mimeType': mime_type,

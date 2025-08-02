@@ -34,14 +34,6 @@ const ModelSelector: React.FC = () => {
     setSelectedTools,
     allTools,
   } = useConfigs()
-
-  // 調試信息
-  console.log('🎨 ModelSelector Debug:', {
-    allToolsLength: allTools?.length || 0,
-    allTools: allTools,
-    selectedToolsLength: selectedTools?.length || 0,
-    textModelsLength: textModels?.length || 0
-  })
   const selectedToolKeys = selectedTools.map(
     (tool) => tool.provider + ':' + tool.id
   )
@@ -113,13 +105,6 @@ const ModelSelector: React.FC = () => {
   }
   const groupedLLMs = groupLLMsByProvider(textModels)
   const groupedTools = groupModelsByProvider(allTools)
-
-  // 調試分組結果
-  console.log('📊 Grouped Tools Debug:', {
-    groupedTools,
-    groupedToolsKeys: Object.keys(groupedTools),
-    groupedToolsEntries: Object.entries(groupedTools)
-  })
 
   return (
     <>
