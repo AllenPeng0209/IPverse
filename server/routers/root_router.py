@@ -78,7 +78,8 @@ async def get_models() -> list[ModelInfo]:
         provider_api_key = provider_config.get('api_key', '').strip()
 
         # Skip provider if URL is empty or API key is empty
-        if not provider_url or not provider_api_key:
+        # if not provider_url or not provider_api_key:
+        if not provider_url:
             continue
 
         models = provider_config.get('models', {})

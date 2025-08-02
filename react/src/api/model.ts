@@ -25,3 +25,9 @@ export const getPlatformModels = async (): Promise<Model[]> => {
   // The backend seems to return { models: [...] }, so we extract it.
   return data.models || data
 }
+
+export const getPlatformTools = async (): Promise<ToolInfo[]> => {
+  const response = await fetch(`${API_BASE_URL}/api/list_tools`)
+  const data = await response.json()
+  return Array.isArray(data) ? data : []
+}

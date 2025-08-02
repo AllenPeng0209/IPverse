@@ -102,6 +102,22 @@ class DatabaseAdapter:
         else:
             return await self.sqlite_db.get_canvas_data(id)
 
+    async def get_or_create_canvas(self, canvas_id: str, canvas_name: str = "Untitled") -> Dict[str, Any]:
+        """
+        Tries to fetch a canvas by its ID. If it doesn't exist, creates a new one.
+        Returns the canvas data.
+        """
+        if self.use_supabase:
+            return await self.supabase_db.get_or_create_canvas(canvas_id, canvas_name)
+        else:
+            # Fallback for SQLite
+            canvas_data = await self.sqlite_db.get_canvas_data(canvas_id)
+            if canvas_data is None:
+                await self.sqlite_db.create_canvas(canvas_id, canvas_name)
+                # Fetch again to ensure consistent return format
+                return await self.sqlite_db.get_canvas_data(canvas_id)
+            return canvas_data
+
     async def delete_canvas(self, id: str):
         """Delete canvas and related data"""
         if self.use_supabase:

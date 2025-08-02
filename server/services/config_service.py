@@ -52,8 +52,7 @@ DEFAULT_PROVIDERS_CONFIG: AppConfig = {
     },
     'openai': {
         'models': {
-            'gpt-4o': {'type': 'text'},
-            'gpt-4o-mini': {'type': 'text'},
+            'o3-mini': {'type': 'text'},
         },
         'url': 'https://api.openai.com/v1/',
         'api_key': '',
@@ -116,6 +115,13 @@ class ConfigService:
 
     async def initialize(self) -> None:
         try:
+            # Inject API keys from environment variables
+            for provider in self.app_config:
+                env_var_name = f"{provider.upper()}_API_KEY"
+                api_key = os.getenv(env_var_name)
+                if api_key:
+                    self.app_config[provider]['api_key'] = api_key
+
             # Ensure the user_data directory exists
             os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
 
@@ -159,6 +165,12 @@ class ConfigService:
     def get_config(self) -> AppConfig:
         if 'jaaz' in self.app_config:
             self.app_config['jaaz']['url'] = self._get_jaaz_url()
+        # Also inject API keys when get_config is called, in case they were set after initialization
+        for provider in self.app_config:
+            env_var_name = f"{provider.upper()}_API_KEY"
+            api_key = os.getenv(env_var_name)
+            if api_key:
+                self.app_config[provider]['api_key'] = api_key
         return self.app_config
 
     async def update_config(self, data: AppConfig) -> Dict[str, str]:

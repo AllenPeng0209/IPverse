@@ -18,6 +18,8 @@ import { useTranslation } from 'react-i18next'
 import { useConfigs } from '@/contexts/configs'
 import ComfuiWorkflowSetting from './ComfyuiWorkflowSetting'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface ComfyuiSettingProps {
   config: LLMConfig
   onConfigChange: (key: string, newConfig: LLMConfig) => void
@@ -72,7 +74,7 @@ export default function ComfyuiSetting({
       return
     }
 
-    fetch(`/api/comfyui/object_info`, {
+    fetch(`${API_BASE_URL}/api/comfyui/object_info`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +116,7 @@ export default function ComfyuiSetting({
     try {
       console.log('Checking ComfyUI status via proxy...')
       // 通过服务端代理接口转发请求
-      const response = await fetch(`/api/settings/comfyui/proxy`, {
+      const response = await fetch(`${API_BASE_URL}/api/settings/comfyui/proxy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -283,16 +285,16 @@ export default function ComfyuiSetting({
               </span>
               {(comfyUIStatus === 'not-running' ||
                 (!comfyUrl && isComfyUIInstalled)) && (
-                <Button
-                  onClick={handleStartClick}
-                  variant="outline"
-                  size="sm"
-                  className="border-green-300 text-green-700 hover:bg-green-50"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  {t('settings:comfyui.startButton')}
-                </Button>
-              )}
+                  <Button
+                    onClick={handleStartClick}
+                    variant="outline"
+                    size="sm"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {t('settings:comfyui.startButton')}
+                  </Button>
+                )}
               <Button
                 onClick={handleUninstallClick}
                 variant="outline"
@@ -328,11 +330,10 @@ export default function ComfyuiSetting({
           placeholder="http://127.0.0.1:8188"
           value={comfyUrl}
           onChange={(e) => handleUrlChange(e.target.value)}
-          className={`w-full ${
-            comfyUrl && !isValidUrl(comfyUrl)
+          className={`w-full ${comfyUrl && !isValidUrl(comfyUrl)
               ? 'border-red-300 focus:border-red-500'
               : ''
-          }`}
+            }`}
         />
         <p className="text-xs text-gray-500">
           {t('settings:comfyui.urlDescription')}

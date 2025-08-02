@@ -75,17 +75,9 @@ origins = []
 if frontend_url:
     origins.append(frontend_url)
 else:
-    # Default origins for development and production if FRONTEND_URL is not set
+    # Default origins for development
     origins = [
-        "http://localhost:5174",
-        "https://ip-verse.vercel.app",
-        "https://react-phi-ruddy.vercel.app",
-        "https://react-jd9gq4ouw-allenpeng0209s-projects.vercel.app",
-        "https://react-iooq19ttr-allenpeng0209s-projects.vercel.app",
-        "https://react-qi3ync38f-allenpeng0209s-projects.vercel.app",
-        "https://react-nies2uj94-allenpeng0209s-projects.vercel.app",
-        "https://react-kcstmpwr3-allenpeng0209s-projects.vercel.app",
-        "https://ip-verse-642j65rve-allenpeng0209s-projects.vercel.app",
+        "http://localhost:5173",
     ]
 
 app.add_middleware(

@@ -1,4 +1,4 @@
-import { getPlatformModels } from '@/api/model'
+import { getPlatformModels, getPlatformTools } from '@/api/model'
 import useConfigsStore from '@/stores/configs'
 import { Model } from '@/types/types'
 import { useQuery } from '@tanstack/react-query'
@@ -19,6 +19,8 @@ export const ConfigsProvider = ({
     setTextModels,
     setTextModel,
     setShowLoginDialog,
+    setAllTools,
+    setSelectedTools,
   } = configsStore
 
   const { data: modelList, refetch: refreshModels } = useQuery({
@@ -29,6 +31,16 @@ export const ConfigsProvider = ({
     refetchOnWindowFocus: true, // 窗口获得焦点时重新获取
     refetchOnReconnect: true, // 网络重连时重新获取
     refetchOnMount: true, // 挂载时重新获取
+  })
+
+  const { data: toolsList } = useQuery({
+    queryKey: ['list_tools'],
+    queryFn: getPlatformTools,
+    staleTime: 1000 * 60 * 5, // 5分钟内数据被认为是新鲜的
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
   })
 
   useEffect(() => {
@@ -59,6 +71,32 @@ export const ConfigsProvider = ({
     setTextModel,
     setTextModels,
     setShowLoginDialog,
+  ])
+
+  useEffect(() => {
+    if (!toolsList) return
+    const tools = Array.isArray(toolsList) ? toolsList : []
+
+    setAllTools(tools)
+
+    // 设置默认选择的工具（从本地存储恢复或选择默认工具）
+    const disabledToolIds = JSON.parse(localStorage.getItem('disabled_tool_ids') || '[]')
+    const enabledTools = tools.filter(tool => !disabledToolIds.includes(tool.id))
+
+    // 如果没有已选择的工具，默认选择一些图像生成工具
+    if (enabledTools.length === 0 && tools.length > 0) {
+      const defaultImageTools = tools.filter(tool =>
+        tool.type === 'image' &&
+        (tool.id.includes('flux') || tool.id.includes('midjourney') || tool.id.includes('gpt_image'))
+      ).slice(0, 2) // 选择前2个默认工具
+      setSelectedTools(defaultImageTools)
+    } else {
+      setSelectedTools(enabledTools)
+    }
+  }, [
+    toolsList,
+    setAllTools,
+    setSelectedTools,
   ])
 
   return (

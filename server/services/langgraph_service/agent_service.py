@@ -155,16 +155,28 @@ def _create_text_model(text_model: ModelInfo) -> Any:
         # Create httpx client with SSL configuration for ChatOpenAI
         http_client = HttpClient.create_sync_client()
         http_async_client = HttpClient.create_async_client()
-        return ChatOpenAI(
-            model=model,
-            api_key=api_key,  # type: ignore
-            timeout=300,
-            base_url=url,
-            temperature=0,
-            # max_tokens=max_tokens, # TODO: 暂时注释掉有问题的参数
-            http_client=http_client,
-            http_async_client=http_async_client
-        )
+        # Special handling for o3-mini model which doesn't support temperature parameter
+        if model == 'o3-mini':
+            return ChatOpenAI(
+                model=model,
+                api_key=api_key,  # type: ignore
+                timeout=300,
+                base_url=url,
+                # o3-mini doesn't support temperature parameter
+                http_client=http_client,
+                http_async_client=http_async_client
+            )
+        else:
+            return ChatOpenAI(
+                model=model,
+                api_key=api_key,  # type: ignore
+                timeout=300,
+                base_url=url,
+                temperature=0,
+                # max_tokens=max_tokens, # TODO: 暂时注释掉有问题的参数
+                http_client=http_client,
+                http_async_client=http_async_client
+            )
 
 
 async def _handle_error(error: Exception, session_id: str) -> None:

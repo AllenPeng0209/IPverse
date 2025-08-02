@@ -46,6 +46,9 @@ async def handle_chat(data: Dict[str, Any]) -> None:
     # TODO: save and fetch system prompt from db or settings config
     system_prompt: Optional[str] = data.get('system_prompt')
 
+    # Ensure the canvas exists before creating a session linked to it
+    await db_adapter.get_or_create_canvas(canvas_id, "Untitled Canvas")
+
     # If there is only one message, create a new chat session
     if len(messages) == 1:
         # create new session

@@ -43,11 +43,12 @@ class SupabaseService:
             return [dict(row) for row in rows]
 
     async def create_chat_session(self, id: str, model: str, provider: str, canvas_id: str, title: Optional[str] = None):
-        """Save a new chat session"""
+        """Save a new chat session, ignoring conflicts if the session already exists."""
         async with self.pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO chat_sessions (id, model, provider, canvas_id, title)
                 VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (id) DO NOTHING
             """, id, model, provider, canvas_id, title)
 
     async def create_message(self, id: str, session_id: str, role: str, content: Dict[str, Any], tool_calls: Optional[Dict[str, Any]] = None, tool_call_id: Optional[str] = None):
@@ -152,6 +153,29 @@ class SupabaseService:
                     'sessions': sessions
                 }
             return None
+
+    async def get_or_create_canvas(self, canvas_id: str, canvas_name: str) -> Dict[str, Any]:
+        """Tries to fetch a canvas by its ID. If it doesn't exist, creates a new one."""
+        async with self.pool.acquire() as conn:
+            # First, try to get the canvas
+            canvas = await conn.fetchrow("SELECT * FROM canvases WHERE id = $1", canvas_id)
+            if canvas:
+                return dict(canvas)
+            
+            # If not found, create it
+            try:
+                await conn.execute("""
+                    INSERT INTO canvases (id, name)
+                    VALUES ($1, $2)
+                """, canvas_id, canvas_name)
+            except asyncpg.exceptions.UniqueViolationError:
+                # In case of a race condition where another process created it
+                # just after our SELECT, we ignore the error and fetch again.
+                pass
+
+            # Fetch and return the newly created (or existing) canvas
+            new_canvas = await conn.fetchrow("SELECT * FROM canvases WHERE id = $1", canvas_id)
+            return dict(new_canvas)
 
     async def delete_canvas(self, id: str):
         """Delete canvas and related data"""
