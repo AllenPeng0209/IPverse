@@ -13,6 +13,15 @@ from services.config_service import FILES_DIR
 from services.db_service import db_service
 from services.websocket_service import send_to_websocket, broadcast_session_update  # type: ignore
 from common import DEFAULT_PORT
+
+
+def get_backend_url() -> str:
+    """Get the backend URL based on deployment environment"""
+    is_cloud_deployment = os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+    if is_cloud_deployment:
+        return 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+    else:
+        return os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
 from utils.http_client import HttpClient
 import aiofiles
 import mimetypes
@@ -73,7 +82,8 @@ async def save_video_to_canvas(
 
         # Create file data
         file_id = generate_video_file_id()
-        file_url = f"/api/file/{filename}"
+        backend_url = get_backend_url()
+        file_url = f"{backend_url}/api/file/{filename}"
 
         file_data: Dict[str, Any] = {
             "mimeType": mime_type,
@@ -152,7 +162,8 @@ async def send_video_error_notification(session_id: str, error_message: str) -> 
 
 def format_video_success_message(filename: str) -> str:
     """Format success message for video generation"""
-    return f"video generated successfully ![video_id: {filename}](http://localhost:{DEFAULT_PORT}/api/file/{filename})"
+    backend_url = get_backend_url()
+    return f"video generated successfully ![video_id: {filename}]({backend_url}/api/file/{filename})"
 
 
 async def process_video_result(

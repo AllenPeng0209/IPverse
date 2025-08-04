@@ -43,6 +43,15 @@ from .utils.comfyui import ComfyUIWorkflowRunner
 from tools.video_generation.video_canvas_utils import generate_new_video_element
 
 
+def get_backend_url() -> str:
+    """Get the backend URL based on deployment environment"""
+    is_cloud_deployment = os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+    if is_cloud_deployment:
+        return 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+    else:
+        return os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
+
+
 def _python_type(param_type: str, default: Any):
     """Map simple param types to Python types."""
     if param_type == "number":
@@ -215,8 +224,8 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
             for output in outputs:
                 mime_type, width, height, filename = output
                 file_id = generate_file_id()
-
-                url = f"/api/file/{filename}"
+                backend_url = get_backend_url()
+                url = f"{backend_url}/api/file/{filename}"
 
                 file_data = {
                     "mimeType": mime_type,
@@ -249,8 +258,9 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
 
                 canvas_data["data"]["elements"].append(new_element)
                 canvas_data["data"]["files"][file_id] = file_data
-
-                image_url = f"http://localhost:{DEFAULT_PORT}/api/file/{filename}"
+                
+                backend_url = get_backend_url()
+                image_url = f"{backend_url}/api/file/{filename}"
 
                 generated_files_info.append(
                     {
