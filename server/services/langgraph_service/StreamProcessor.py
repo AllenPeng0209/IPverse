@@ -54,10 +54,28 @@ class StreamProcessor:
     async def _handle_values_chunk(self, chunk_data: Dict[str, Any]) -> None:
         """处理 values 类型的 chunk"""
         all_messages = chunk_data.get('messages', [])
-        oai_messages = convert_to_openai_messages(all_messages)
-        # 确保 oai_messages 是列表类型
-        if not isinstance(oai_messages, list):
-            oai_messages = [oai_messages] if oai_messages else []
+        
+        # 添加錯誤處理和消息清理
+        try:
+            # 在轉換前清理消息，確保工具消息有必需的字段
+            cleaned_messages = []
+            for msg in all_messages:
+                # 檢查是否是ToolMessage且缺少tool_call_id
+                if hasattr(msg, 'type') and msg.type == 'tool' and not hasattr(msg, 'tool_call_id'):
+                    print(f"⚠️ Skipping ToolMessage without tool_call_id: {msg}")
+                    continue
+                cleaned_messages.append(msg)
+            
+            oai_messages = convert_to_openai_messages(cleaned_messages)
+            # 确保 oai_messages 是列表类型
+            if not isinstance(oai_messages, list):
+                oai_messages = [oai_messages] if oai_messages else []
+
+        except Exception as e:
+            print(f"❌ Error converting messages to OpenAI format: {e}")
+            print(f"🔍 Problematic messages: {all_messages}")
+            # 使用空列表作為後備
+            oai_messages = []
 
         # 发送所有消息到前端
         await self.websocket_service(self.session_id, {
@@ -69,11 +87,15 @@ class StreamProcessor:
         for i in range(self.last_saved_message_index + 1, len(oai_messages)):
             new_message = oai_messages[i]
             if len(oai_messages) > 0:  # 确保有消息才保存
-                await self.db_service.create_message(
-                    self.session_id,
-                    new_message.get('role', 'user'),
-                    json.dumps(new_message)
-                )
+                try:
+                    await self.db_service.create_message(
+                        self.session_id,
+                        new_message.get('role', 'user'),
+                        json.dumps(new_message)
+                    )
+                except Exception as e:
+                    print(f"❌ Error saving message to database: {e}")
+                    print(f"🔍 Problematic message: {new_message}")
             self.last_saved_message_index = i
 
     async def _handle_message_chunk(self, ai_message_chunk: AIMessageChunk) -> None:
@@ -84,13 +106,22 @@ class StreamProcessor:
 
             if isinstance(ai_message_chunk, ToolMessage):
                 # 工具调用结果之后会在 values 类型中发送到前端，这里会更快出现一些
-                oai_message = convert_to_openai_messages([ai_message_chunk])[0]
-                print('👇toolcall res oai_message', oai_message)
-                await self.websocket_service(self.session_id, {
-                    'type': 'tool_call_result',
-                    'id': ai_message_chunk.tool_call_id,
-                    'message': oai_message
-                })
+                try:
+                    # 檢查ToolMessage是否有必需的tool_call_id字段
+                    if not hasattr(ai_message_chunk, 'tool_call_id') or not ai_message_chunk.tool_call_id:
+                        print(f"⚠️ ToolMessage missing tool_call_id, skipping: {ai_message_chunk}")
+                        return
+                    
+                    oai_message = convert_to_openai_messages([ai_message_chunk])[0]
+                    print('👇toolcall res oai_message', oai_message)
+                    await self.websocket_service(self.session_id, {
+                        'type': 'tool_call_result',
+                        'id': ai_message_chunk.tool_call_id,
+                        'message': oai_message
+                    })
+                except Exception as e:
+                    print(f"❌ Error processing ToolMessage: {e}")
+                    print(f"🔍 Problematic ToolMessage: {ai_message_chunk}")
             elif content:
                 # 发送文本内容
                 await self.websocket_service(self.session_id, {
