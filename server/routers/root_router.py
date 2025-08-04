@@ -134,13 +134,19 @@ async def list_tools() -> list[ToolInfoJson]:
 
 
 @router.get("/list_chat_sessions")
-async def list_chat_sessions():
-    return await db_service.list_sessions()
+async def list_chat_sessions(canvas_id: str = None):
+    print(f"🔍 Fetching chat sessions for canvas_id: {canvas_id}")
+    sessions = await db_adapter.list_sessions(canvas_id)
+    print(f"📋 Found {len(sessions)} chat sessions")
+    return sessions
 
 
 @router.get("/chat_session/{session_id}")
 async def get_chat_session(session_id: str):
-    return await db_service.get_chat_history(session_id)
+    print(f"💬 Fetching chat history for session_id: {session_id}")
+    messages = await db_adapter.get_chat_history(session_id)
+    print(f"📝 Found {len(messages)} messages")
+    return messages
 
 
 @router.get("/health")
