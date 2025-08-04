@@ -20,7 +20,10 @@ SUPABASE_DATABASE_URL='postgresql://postgres:!Ss12369874allenp@db.gypivtzfjlzbzp
 # 設置環境變量
 SUPABASE_URL="https://gypivtzfjlzbzpahybof.supabase.co"
 SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5cGl2dHpmamx6YnpwYWh5Ym9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2OTIwNDYsImV4cCI6MjA2OTI2ODA0Nn0.CMvZyXXwZAfRE9ut6KlOqzplUw7rksc55CQUCuqwt3Q"
-SUPABASE_SERVICE_ROLE_KEY="⚠️請手動設置正確的service_role_key⚠️"
+
+# ⚠️ 注意：Service Role Key 需要手動獲取（出於安全考慮）
+# 請前往 https://supabase.com/dashboard > 項目設置 > API > service_role key
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cGlxZWNjZnZhaWJkemZrYXlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTI2NTcwMywiZXhwIjoyMDY2ODQxNzAzfQ.Ydn7hiN0hfdJrthvPdEtLSyfIpesxGNHdAtv4UoA5yw"
 
 # 4. 填寫你部署在 Vercel 上的前端網址
 FRONTEND_URL="https://ip-verse.vercel.app"
@@ -53,24 +56,16 @@ if [[ "$SUPABASE_SERVICE_ROLE_KEY" == *"請手動"* ]]; then
 fi
 
 # 執行部署指令
-gcloud run deploy "$SERVICE_NAME" \
-  --source "$SOURCE_DIR" \
-  --project "$PROJECT_ID" \
-  --region "$REGION" \
-  --execution-environment gen2 \
+gcloud run deploy $SERVICE_NAME \
+  --source=$SOURCE_DIR \
+  --region=$REGION \
+  --platform=managed \
   --allow-unauthenticated \
+  --port=8080 \
   --cpu=2 \
   --memory=2Gi \
   --timeout=900 \
-  --set-env-vars \
-    USE_SUPABASE=true,\
-    SUPABASE_DATABASE_URL="postgresql://postgres:!Ss12369874allenp@db.gypivtzfjlzbzpahybof.supabase.co:5432/postgres",\
-    SUPABASE_URL="$SUPABASE_URL",\
-    SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY",\
-    SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY",\
-    FRONTEND_URL="$FRONTEND_URL",\
-    JAAZ_API_KEY="$JAAZ_API_KEY",\
-    CLOUD_DEPLOYMENT=true
+  --set-env-vars "USE_SUPABASE=true,SUPABASE_DATABASE_URL=postgresql://postgres:!Ss12369874allenp@db.gypivtzfjlzbzpahybof.supabase.co:5432/postgres,SUPABASE_URL=$SUPABASE_URL,SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY,FRONTEND_URL=$FRONTEND_URL,JAAZ_API_KEY=$JAAZ_API_KEY,CLOUD_DEPLOYMENT=true"
 
 echo "✅ 部署指令執行完畢。"
 echo "-----------------------------------------------------"
