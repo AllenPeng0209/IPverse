@@ -17,26 +17,26 @@ PROJECT_ID="ipverse-467311"
 SUPABASE_DATABASE_URL='postgresql://postgres:!Ss12369874allenp@db.gypivtzfjlzbzpahybof.supabase.co:5432/postgres'
 
 # 3. Supabase 配置 (已自動從 MCP 獲取)
+# 設置環境變量
 SUPABASE_URL="https://gypivtzfjlzbzpahybof.supabase.co"
 SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5cGl2dHpmamx6YnpwYWh5Ym9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2OTIwNDYsImV4cCI6MjA2OTI2ODA0Nn0.CMvZyXXwZAfRE9ut6KlOqzplUw7rksc55CQUCuqwt3Q"
-
-# ⚠️ 注意：Service Role Key 需要手動獲取（出於安全考慮）
-# 請前往 https://supabase.com/dashboard > 項目設置 > API > service_role key
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cGlxZWNjZnZhaWJkemZrYXlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTI2NTcwMywiZXhwIjoyMDY2ODQxNzAzfQ.Ydn7hiN0hfdJrthvPdEtLSyfIpesxGNHdAtv4UoA5yw"
+SUPABASE_SERVICE_ROLE_KEY="⚠️請手動設置正確的service_role_key⚠️"
 
 # 4. 填寫你部署在 Vercel 上的前端網址
 FRONTEND_URL="https://ip-verse.vercel.app"
+JAAZ_API_KEY="test-demo-key-for-tools"
 
 # --- 以下是部署腳本，通常不需要修改 ---
 REGION="asia-northeast1"
 SERVICE_NAME="jaaz-backend"
 SOURCE_DIR="." # 包含 Dockerfile 的目錄
 
-echo "🚀 準備部署服務 '$SERVICE_NAME' 到 Cloud Run..."
-echo "GCP Project: $PROJECT_ID"
-echo "Region: $REGION"
-echo "Supabase URL: $SUPABASE_URL"
-echo "Frontend URL: $FRONTEND_URL"
+echo "🚀 準備部署服務 'jaaz-backend' 到 Cloud Run..."
+echo "GCP Project: ${PROJECT_ID}"
+echo "Region: ${REGION}"
+echo "Supabase URL: ${SUPABASE_URL}"
+echo "Frontend URL: ${FRONTEND_URL}"
+echo "Jaaz API Key: ${JAAZ_API_KEY}"
 echo "-----------------------------------------------------"
 
 # 檢查 service_role key 是否已設置
@@ -62,7 +62,15 @@ gcloud run deploy "$SERVICE_NAME" \
   --cpu=2 \
   --memory=2Gi \
   --timeout=900 \
-  --update-env-vars="CLOUD_DEPLOYMENT=true,USE_SUPABASE=true,FRONTEND_URL=$FRONTEND_URL,SUPABASE_DATABASE_URL=$SUPABASE_DATABASE_URL,SUPABASE_URL=$SUPABASE_URL,SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
+  --set-env-vars \
+    USE_SUPABASE=true,\
+    SUPABASE_DATABASE_URL="postgresql://postgres:!Ss12369874allenp@db.gypivtzfjlzbzpahybof.supabase.co:5432/postgres",\
+    SUPABASE_URL="$SUPABASE_URL",\
+    SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY",\
+    SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY",\
+    FRONTEND_URL="$FRONTEND_URL",\
+    JAAZ_API_KEY="$JAAZ_API_KEY",\
+    CLOUD_DEPLOYMENT=true
 
 echo "✅ 部署指令執行完畢。"
 echo "-----------------------------------------------------"
