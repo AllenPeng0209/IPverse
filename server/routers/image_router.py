@@ -187,11 +187,54 @@ def compress_image(img: Image.Image, max_size_mb: float) -> bytes:
 # 文件下载接口
 @router.get("/file/{file_id}")
 async def get_file(file_id: str):
+    from fastapi.responses import RedirectResponse
+    
     file_path = os.path.join(FILES_DIR, f'{file_id}')
     print('🦄get_file file_path', file_path)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path)
+    
+    # 首先嘗試從本地文件系統提供文件
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    
+    # 如果本地文件不存在，嘗試從 Supabase Storage 查找
+    if supabase_storage.initialized:
+        try:
+            # 先嘗試常見的直接路徑
+            common_paths = [
+                f"uploads/{file_id}",    # 聊天上傳路徑
+            ]
+            
+            for storage_path in common_paths:
+                public_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/{storage_path}"
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.head(public_url, timeout=3.0)
+                    if response.status_code == 200:
+                        print(f"🔗 Found at {storage_path}, redirecting to: {public_url}")
+                        return RedirectResponse(url=public_url, status_code=302)
+                        
+        except Exception as e:
+            print(f"❌ Error checking common paths: {e}")
+            
+        # 如果直接路徑沒找到，嘗試通過資料庫查找
+        try:
+            from services.db_adapter import db_adapter
+            
+            # 查詢可能匹配的文件路徑
+            query = f"SELECT name FROM storage.objects WHERE name LIKE '%{file_id.replace('.', '%')}%' ORDER BY created_at DESC LIMIT 1"
+            result = await db_adapter.execute_sql(query)
+            
+            if result and len(result) > 0:
+                storage_path = result[0]["name"]
+                public_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/{storage_path}"
+                print(f"🔗 Found in database: {storage_path} -> {public_url}")
+                return RedirectResponse(url=public_url, status_code=302)
+                
+        except Exception as e:
+            print(f"❌ Error searching database: {e}")
+    
+    # 如果都找不到，返回 404
+    raise HTTPException(status_code=404, detail="File not found")
 
 
 @router.post("/comfyui/object_info")
