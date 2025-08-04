@@ -1,6 +1,8 @@
 import os
+import base64
 import traceback
 from typing import Optional, Any
+from io import BytesIO
 from openai import OpenAI
 from .image_base_provider import ImageProviderBase
 from ..utils.image_utils import get_image_info_and_save, generate_image_id
@@ -43,17 +45,22 @@ class OpenAIImageProvider(ImageProviderBase):
             # Determine if this is an edit operation or generation
             if input_images and len(input_images) > 0:
                 # Image editing mode
-                input_image_path = input_images[0]
-                # For OpenAI, input_image should be the file path
-                full_path = os.path.join(FILES_DIR, input_image_path)
-
-                with open(full_path, 'rb') as image_file:
+                input_image_data = input_images[0]
+                # input_images now contains base64 data URLs from process_input_image
+                if input_image_data.startswith('data:'):
+                    # Extract base64 data from data URL
+                    header, data = input_image_data.split(',', 1)
+                    image_bytes = base64.b64decode(data)
+                    image_file = BytesIO(image_bytes)
+                    
                     result = self.client.images.edit(
                         model=model,
                         image=image_file,
                         prompt=prompt,
                         n=kwargs.get("num_images", 1)
                     )
+                else:
+                    raise ValueError(f"Invalid image data format: expected data URL, got {input_image_data[:50]}...")
             else:
                 # Image generation mode
                 # Map aspect ratio to size

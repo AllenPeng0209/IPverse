@@ -139,7 +139,7 @@ async def process_input_image(input_image: str | None) -> str | None:
     Process input image and convert to base64 format
 
     Args:
-        input_image: Image file path
+        input_image: Image file path or filename
 
     Returns:
         Base64 encoded image with data URL, or None if no image
@@ -148,12 +148,46 @@ async def process_input_image(input_image: str | None) -> str | None:
         return None
 
     try:
+        # First try local file
         full_path = os.path.join(FILES_DIR, input_image)
-        if not os.path.exists(full_path):
-            print(f"Warning: Image file not found: {full_path}")
+        image = None
+        
+        if os.path.exists(full_path):
+            # Load from local file
+            print(f"📁 Loading image from local file: {full_path}")
+            image = Image.open(full_path)
+        else:
+            # Try to load from backend URL (for images stored in Supabase but with local fallback)
+            print(f"🌐 Local file not found, trying to load from backend URL: {input_image}")
+            
+            # Construct the backend URL
+            import os as env_os
+            is_cloud_deployment = env_os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+            if is_cloud_deployment:
+                backend_url = 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+            else:
+                backend_url = env_os.environ.get('BACKEND_URL', 'http://localhost:8080')
+            
+            image_url = f'{backend_url}/api/file/{input_image}'
+            print(f"🔗 Fetching image from: {image_url}")
+            
+            # Use aiohttp to fetch the image
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.get(image_url) as response:
+                    if response.status == 200:
+                        image_data = await response.read()
+                        image = Image.open(BytesIO(image_data))
+                        print(f"✅ Successfully loaded image from URL")
+                    else:
+                        print(f"❌ Failed to fetch image from URL, status: {response.status}")
+                        return None
+
+        if not image:
+            print(f"❌ Could not load image: {input_image}")
             return None
 
-        image = Image.open(full_path)
+        # Get file extension and determine MIME type
         ext = os.path.splitext(input_image)[1].lower()
         mime_type_map = {
             '.png': 'image/png',
@@ -163,14 +197,26 @@ async def process_input_image(input_image: str | None) -> str | None:
         }
         mime_type = mime_type_map.get(ext, 'image/jpeg')
 
+        # Convert to base64
         with BytesIO() as output:
-            image.save(output, format=str(mime_type.split('/')[1]).upper())
+            format_name = str(mime_type.split('/')[1]).upper()
+            if format_name == 'JPEG':
+                # Convert RGBA to RGB for JPEG
+                if image.mode in ('RGBA', 'LA'):
+                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                    image = background
+            
+            image.save(output, format=format_name)
             compressed_data = output.getvalue()
             b64_data = base64.b64encode(compressed_data).decode('utf-8')
 
         data_url = f"data:{mime_type};base64,{b64_data}"
+        print(f"🖼️ Successfully converted image to base64 data URL")
         return data_url
 
     except Exception as e:
-        print(f"Error processing image {input_image}: {e}")
+        print(f"❌ Error processing image {input_image}: {e}")
+        import traceback
+        traceback.print_exc()
         return None
