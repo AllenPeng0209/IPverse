@@ -3,6 +3,7 @@ from fastapi.concurrency import run_in_threadpool
 from common import DEFAULT_PORT
 from tools.utils.image_canvas_utils import generate_file_id
 from services.config_service import FILES_DIR
+from services.supabase_storage_service import supabase_storage
 
 from PIL import Image
 from io import BytesIO
@@ -87,11 +88,45 @@ async def upload_image(file: UploadFile = File(...), max_size_mb: float = 3.0):
             # img.save(file_path, format=save_format)
             await run_in_threadpool(img.save, file_path, format=save_format)
 
+    # 嘗試上傳到 Supabase Storage（如果已配置）
+    final_url = f'http://localhost:{DEFAULT_PORT}/api/file/{file_id}.{extension}'
+    
+    if supabase_storage.initialized:
+        try:
+            # Storage path in Supabase
+            storage_path = f"uploads/{file_id}.{extension}"
+            
+            # Upload to Supabase Storage
+            public_url = await supabase_storage.upload_file(file_path, storage_path)
+            
+            # Use Supabase URL
+            final_url = public_url
+            
+            print(f"✅ Image uploaded to Supabase Storage: {public_url}")
+            
+            # Optionally remove local file to save space
+            try:
+                os.remove(file_path)
+                print(f"🗑️ Removed local file: {file_path}")
+            except Exception as e:
+                print(f"⚠️ Could not remove local file: {e}")
+                
+        except Exception as e:
+            print(f"❌ Failed to upload to Supabase Storage: {e}")
+            # Fallback to local URL
+            backend_url = os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
+            final_url = f'{backend_url}/api/file/{file_id}.{extension}'
+    else:
+        # Use local URL if Supabase Storage not available
+        backend_url = os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
+        final_url = f'{backend_url}/api/file/{file_id}.{extension}'
+
     # 返回文件信息
     print('🦄upload_image file_path', file_path)
+    print('🦄upload_image final_url', final_url)
     return {
         'file_id': f'{file_id}.{extension}',
-        'url': f'http://localhost:{DEFAULT_PORT}/api/file/{file_id}.{extension}',
+        'url': final_url,
         'width': width,
         'height': height,
     }
@@ -177,3 +212,10 @@ async def get_object_info(data: dict):
         print(f"Unexpected error connecting to ComfyUI: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to connect to ComfyUI: {str(e)}")
+
+
+# 添加 /upload 路由作為 /upload_image 的別名，以兼容前端
+@router.post("/upload")
+async def upload(file: UploadFile = File(...), max_size_mb: float = 3.0):
+    """上传图片接口的别名，兼容前端 /api/upload 请求"""
+    return await upload_image(file, max_size_mb)
