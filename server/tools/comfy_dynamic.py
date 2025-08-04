@@ -36,7 +36,7 @@ from langchain_core.tools import InjectedToolCallId, tool, BaseTool
 from pydantic import BaseModel, Field, create_model
 from routers.comfyui_execution import upload_image
 from services.config_service import FILES_DIR, config_service, IMAGE_FORMATS
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.websocket_service import broadcast_session_update, send_to_websocket
 
 from .utils.comfyui import ComfyUIWorkflowRunner
@@ -158,7 +158,7 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
                 image_name = await upload_image(image_stream, api_url, filename)
                 required_data[key] = image_name
 
-        workflow_dict = await db_service.get_comfy_workflow(wf["id"])
+        workflow_dict = await db_adapter.get_comfy_workflow(wf["id"])
 
         try:
             input_defs: List[Dict[str, Any]] = (
@@ -211,7 +211,7 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
                 outputs = [outputs]
 
             # update the canvas data, add the new image element
-            canvas_data = await db_service.get_canvas_data(canvas_id)
+            canvas_data = await db_adapter.get_canvas_data(canvas_id)
             if "data" not in canvas_data:
                 canvas_data["data"] = {}
             if "elements" not in canvas_data["data"]:
@@ -272,7 +272,7 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
                     }
                 )
 
-            await db_service.save_canvas_data(
+                            await db_adapter.save_canvas_data(
                 canvas_id, json.dumps(canvas_data["data"])
             )
 

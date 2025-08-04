@@ -10,7 +10,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import Dict, List, Any, Tuple, Optional, Union
 from services.config_service import FILES_DIR
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.websocket_service import send_to_websocket, broadcast_session_update  # type: ignore
 from common import DEFAULT_PORT
 
@@ -103,7 +103,7 @@ async def save_video_to_canvas(
         )
 
         # Update canvas data
-        canvas_data: Optional[Dict[str, Any]] = await db_service.get_canvas_data(canvas_id)
+        canvas_data: Optional[Dict[str, Any]] = await db_adapter.get_canvas_data(canvas_id)
         if canvas_data is None:
             canvas_data = {}
         if "data" not in canvas_data:
@@ -118,7 +118,7 @@ async def save_video_to_canvas(
         canvas_data["data"]["files"][file_id] = file_data
 
         # Save updated canvas data
-        await db_service.save_canvas_data(canvas_id, json.dumps(canvas_data["data"]))
+        await db_adapter.save_canvas_data(canvas_id, json.dumps(canvas_data["data"]))
 
         return filename, file_data, new_video_element
 
@@ -264,7 +264,7 @@ async def generate_new_video_element(
 ) -> Dict[str, Any]:
     """Generate new video element for canvas"""
     if canvas_data is None:
-        canvas = await db_service.get_canvas_data(canvas_id)
+        canvas = await db_adapter.get_canvas_data(canvas_id)
         if canvas is None:
             canvas = {"data": {}}
         canvas_data = canvas.get("data", {})

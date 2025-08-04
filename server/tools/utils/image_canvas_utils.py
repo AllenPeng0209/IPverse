@@ -11,7 +11,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Dict, List, Any, Optional, Union, cast
 from nanoid import generate
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.websocket_service import broadcast_session_update
 from services.websocket_service import send_to_websocket
 from services.supabase_storage_service import supabase_storage
@@ -50,7 +50,7 @@ async def generate_new_image_element(
 ) -> Dict[str, Any]:
     """Generate new image element for canvas"""
     if canvas_data is None:
-        canvas = await db_service.get_canvas_data(canvas_id)
+        canvas = await db_adapter.get_canvas_data(canvas_id)
         if canvas is None:
             canvas = {"data": {}}
         canvas_data = canvas.get("data", {})
@@ -100,7 +100,7 @@ async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, m
     # Use lock to ensure atomicity of the save process
     async with canvas_lock_manager.lock_canvas(canvas_id):
         # Fetch canvas data once inside the lock
-        canvas: Optional[Dict[str, Any]] = await db_service.get_canvas_data(canvas_id)
+        canvas: Optional[Dict[str, Any]] = await db_adapter.get_canvas_data(canvas_id)
         if canvas is None:
             canvas = {'data': {}}
         canvas_data: Dict[str, Any] = canvas.get('data', {})
@@ -174,7 +174,7 @@ async def save_image_to_canvas(session_id: str, canvas_id: str, filename: str, m
         canvas_data['files'][file_id] = file_data
 
         # Save the updated canvas data back to the database
-        await db_service.save_canvas_data(canvas_id, json.dumps(canvas_data))
+        await db_adapter.save_canvas_data(canvas_id, json.dumps(canvas_data))
 
         # Broadcast image generation message to frontend
         await broadcast_session_update(session_id, canvas_id, {
