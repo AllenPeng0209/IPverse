@@ -219,29 +219,39 @@ async def get_file(file_id: str):
         # 如果直接路徑沒找到，嘗試通過模式匹配查找 canvas 路徑
         try:
             # 我們知道 canvas 文件的格式是: canvas/{canvas_id}/{filename}
-            # 直接嘗試一些已知的可能路徑
+            # 動態獲取所有 canvas ID 來查找文件
             
-            # 從數據庫獲取已知的 canvas ID 列表
-            canvas_test_paths = [
-                "canvas/qiOuoR0GhB_SUAfiQ5evF",  # 已知存在的路徑
-                "canvas/H7L9rSfAami0LK-MYIGO1",  # 已知存在的路徑  
-                "canvas/et1KGstRGHyPnMlXdxssK",  # 已知存在的路徑
-            ]
+            from services.db_adapter import db_adapter
+            
+            # 獲取所有 canvas ID
+            try:
+                canvases = await db_adapter.list_canvases()
+                canvas_ids = [canvas.get('id') for canvas in canvases if canvas.get('id')]
+                print(f"🔍 Found {len(canvas_ids)} canvas IDs to search")
+            except Exception as e:
+                print(f"⚠️ Could not get canvas IDs from database: {e}")
+                # 回退到硬編碼的已知路徑
+                canvas_ids = [
+                    "Tu9xMOoLtND6s_gZyiMhi",  # 當前用戶的canvas
+                    "qiOuoR0GhB_SUAfiQ5evF",  # 已知存在的路徑
+                    "H7L9rSfAami0LK-MYIGO1",  # 已知存在的路徑  
+                    "et1KGstRGHyPnMlXdxssK",  # 已知存在的路徑
+                ]
             
             async with httpx.AsyncClient() as client:
-                for canvas_path in canvas_test_paths:
-                    test_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/{canvas_path}/{file_id}"
+                for canvas_id in canvas_ids:
+                    test_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/canvas/{canvas_id}/{file_id}"
                     
                     try:
                         response = await client.head(test_url, timeout=3.0)
                         if response.status_code == 200:
-                            print(f"🔗 Found file at: {canvas_path}/{file_id} -> {test_url}")
+                            print(f"🔗 Found file at: canvas/{canvas_id}/{file_id} -> {test_url}")
                             return RedirectResponse(url=test_url, status_code=302)
                     except Exception as e:
-                        print(f"❌ Error testing {test_url}: {e}")
+                        # 不打印每個失敗的嘗試，避免日誌過多
                         continue
                         
-                print(f"🔍 File {file_id} not found in any known canvas paths")
+                print(f"🔍 File {file_id} not found in any canvas paths (checked {len(canvas_ids)} canvases)")
                     
         except Exception as e:
             print(f"❌ Error searching canvas paths: {e}")
