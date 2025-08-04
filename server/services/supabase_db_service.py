@@ -86,9 +86,17 @@ class SupabaseService:
                     except:
                         tool_calls = None
 
+                # Handle nested content structure
+                if isinstance(content, dict) and 'content' in content and 'role' in content:
+                    # If content is nested (contains role and content), extract the inner content
+                    actual_content = content['content']
+                else:
+                    # If content is direct, use it as is
+                    actual_content = content
+                
                 message = {
                     "role": row['role'],
-                    "content": content
+                    "content": actual_content
                 }
                 
                 if tool_calls:
