@@ -64,6 +64,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
   onSendMessages,
   onCancelChat,
 }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
   const { t } = useTranslation()
   const { authStatus } = useAuth()
   const { textModel, selectedTools, setShowLoginDialog } = useConfigs()
@@ -213,7 +214,9 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
 
     // Fetch images as base64
     const imagePromises = images.map(async (image) => {
-      const imageUrl = image.url || `/api/file/${image.file_id}`
+      // Use full URL if available, otherwise construct full backend URL
+      const imageUrl = image.url || `${API_BASE_URL}/api/file/${image.file_id}`
+      console.log('🖼️ Fetching image from URL:', imageUrl)
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       return new Promise<string>((resolve) => {
@@ -425,7 +428,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
               >
                 <img
                   key={image.file_id}
-                  src={image.url || `/api/file/${image.file_id}`}
+                  src={image.url || `${API_BASE_URL}/api/file/${image.file_id}`}
                   alt="Uploaded image"
                   className="w-full h-full object-cover rounded-md"
                   draggable={false}
