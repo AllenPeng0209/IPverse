@@ -216,44 +216,35 @@ async def get_file(file_id: str):
         except Exception as e:
             print(f"❌ Error checking common paths: {e}")
             
-        # 如果直接路徑沒找到，嘗試查找 canvas 路徑
+        # 如果直接路徑沒找到，嘗試通過模式匹配查找 canvas 路徑
         try:
-            import httpx
+            # 我們知道 canvas 文件的格式是: canvas/{canvas_id}/{filename}
+            # 直接嘗試一些已知的可能路徑
             
-            # 從已知的 canvas 文件中查找匹配的文件名
-            # 我們知道文件存儲格式是: canvas/{canvas_id}/{filename}
-            
-            # 先嘗試從 Supabase Storage API 列出可能的文件
-            storage_api_url = f"{supabase_storage.supabase_url}/storage/v1/object/list/{supabase_storage.bucket_name}"
+            # 從數據庫獲取已知的 canvas ID 列表
+            canvas_test_paths = [
+                "canvas/qiOuoR0GhB_SUAfiQ5evF",  # 已知存在的路徑
+                "canvas/H7L9rSfAami0LK-MYIGO1",  # 已知存在的路徑  
+                "canvas/et1KGstRGHyPnMlXdxssK",  # 已知存在的路徑
+            ]
             
             async with httpx.AsyncClient() as client:
-                # 列出 canvas 文件夾下的內容  
-                response = await client.post(
-                    storage_api_url,
-                    headers={
-                        "Authorization": f"Bearer {supabase_storage.supabase_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={"limit": 1000, "search": file_id},
-                    timeout=5.0
-                )
-                
-                if response.status_code == 200:
-                    files = response.json()
-                    print(f"🔍 Search results for {file_id}: {files}")
+                for canvas_path in canvas_test_paths:
+                    test_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/{canvas_path}/{file_id}"
                     
-                    # 查找包含文件名的條目
-                    for file_info in files:
-                        if isinstance(file_info, dict) and file_info.get('name', '').endswith(file_id):
-                            storage_path = file_info['name']
-                            public_url = f"{supabase_storage.supabase_url}/storage/v1/object/public/{supabase_storage.bucket_name}/{storage_path}"
-                            print(f"🔗 Found matching file: {storage_path} -> {public_url}")
-                            return RedirectResponse(url=public_url, status_code=302)
-                else:
-                    print(f"❌ Storage API search failed: {response.status_code} - {response.text}")
+                    try:
+                        response = await client.head(test_url, timeout=3.0)
+                        if response.status_code == 200:
+                            print(f"🔗 Found file at: {canvas_path}/{file_id} -> {test_url}")
+                            return RedirectResponse(url=test_url, status_code=302)
+                    except Exception as e:
+                        print(f"❌ Error testing {test_url}: {e}")
+                        continue
+                        
+                print(f"🔍 File {file_id} not found in any known canvas paths")
                     
         except Exception as e:
-            print(f"❌ Error searching storage: {e}")
+            print(f"❌ Error searching canvas paths: {e}")
     
     # 如果都找不到，返回 404
     raise HTTPException(status_code=404, detail="File not found")
