@@ -15,16 +15,26 @@ export default function ChatHistory({
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([])
   useEffect(() => {
     const fetchChatSessions = async () => {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
-      console.log('📋 Loading chat sessions list')
-      const sessions = await fetch(`${API_BASE_URL}/api/list_chat_sessions`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const data = await sessions.json()
-      console.log('📋 Loaded chat sessions:', data.length)
-      setChatSessions(data)
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+        console.log('📋 Loading chat sessions list from', API_BASE_URL)
+        const sessions = await fetch(`${API_BASE_URL}/api/list_chat_sessions`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!sessions.ok) {
+          console.error('❌ Failed to fetch chat sessions:', sessions.status, sessions.statusText)
+          return
+        }
+
+        const data = await sessions.json()
+        console.log('📋 Loaded chat sessions:', data.length)
+        setChatSessions(data)
+      } catch (error) {
+        console.error('❌ Error loading chat sessions:', error)
+      }
     }
 
     fetchChatSessions()

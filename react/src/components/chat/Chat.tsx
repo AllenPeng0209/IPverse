@@ -515,12 +515,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     sessionIdRef.current = sessionId
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
-    console.log('🔍 Loading chat history for session:', sessionId)
-    const resp = await fetch(`${API_BASE_URL}/api/chat_session/${sessionId}`)
-    const data = await resp.json()
-    const msgs = data?.length ? data : []
-    console.log('📝 Loaded messages:', msgs.length)
+    let msgs = []
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+      console.log('🔍 Loading chat history for session:', sessionId, 'from', API_BASE_URL)
+      const resp = await fetch(`${API_BASE_URL}/api/chat_session/${sessionId}`)
+
+      if (!resp.ok) {
+        console.error('❌ Failed to fetch chat history:', resp.status, resp.statusText)
+        return
+      }
+
+      const data = await resp.json()
+      msgs = data?.length ? data : []
+      console.log('📝 Loaded messages:', msgs.length)
+    } catch (error) {
+      console.error('❌ Error loading chat history:', error)
+      return
+    }
 
     setMessages(mergeToolCallResult(msgs))
     if (msgs.length > 0) {
