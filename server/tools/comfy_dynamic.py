@@ -272,7 +272,7 @@ def build_tool(wf: Dict[str, Any]) -> BaseTool:
                     }
                 )
 
-                            await db_adapter.save_canvas_data(
+            await db_adapter.save_canvas_data(
                 canvas_id, json.dumps(canvas_data["data"])
             )
 
