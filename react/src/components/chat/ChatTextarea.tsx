@@ -73,6 +73,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
   const [images, setImages] = useState<
     {
       file_id: string
+      url?: string
       width: number
       height: number
     }[]
@@ -118,6 +119,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
         ...prev,
         {
           file_id: data.file_id || data.url,
+          url: data.url, // 保存完整的 URL
           width: data.width || 0,
           height: data.height || 0,
         },
@@ -211,7 +213,8 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
 
     // Fetch images as base64
     const imagePromises = images.map(async (image) => {
-      const response = await fetch(`/api/file/${image.file_id}`)
+      const imageUrl = image.url || `/api/file/${image.file_id}`
+      const response = await fetch(imageUrl)
       const blob = await response.blob()
       return new Promise<string>((resolve) => {
         const reader = new FileReader()
@@ -422,7 +425,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
               >
                 <img
                   key={image.file_id}
-                  src={`/api/file/${image.file_id}`}
+                  src={image.url || `/api/file/${image.file_id}`}
                   alt="Uploaded image"
                   className="w-full h-full object-cover rounded-md"
                   draggable={false}

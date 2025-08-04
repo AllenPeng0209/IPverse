@@ -91,18 +91,24 @@ app = FastAPI(lifespan=lifespan)
 
 # Set up CORS middleware
 frontend_url = os.environ.get('FRONTEND_URL')
-origins = []
+origins = [
+    "http://localhost:5173",  # 開發環境
+    "https://ip-verse.vercel.app",  # 生產環境前端
+]
+
+# 如果有設置環境變量，也添加進去
 if frontend_url:
     origins.append(frontend_url)
-else:
-    # Default origins for development
-    origins = [
-        "http://localhost:5173",
-    ]
+
+# 去重
+origins = list(set(origins))
+
+print(f"🌐 CORS allowed origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # 支援所有 Vercel 部署
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -88,9 +88,19 @@ async def upload_image(file: UploadFile = File(...), max_size_mb: float = 3.0):
             # img.save(file_path, format=save_format)
             await run_in_threadpool(img.save, file_path, format=save_format)
 
-    # 嘗試上傳到 Supabase Storage（如果已配置）
-    final_url = f'http://localhost:{DEFAULT_PORT}/api/file/{file_id}.{extension}'
+    # 確定後端 URL（雲端部署或本地開發）
+    is_cloud_deployment = os.environ.get('CLOUD_DEPLOYMENT', 'false').lower() == 'true'
+    if is_cloud_deployment:
+        # 雲端部署使用 Cloud Run URL
+        backend_url = 'https://jaaz-backend-337074826438.asia-northeast1.run.app'
+    else:
+        # 本地開發
+        backend_url = os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
     
+    # 默認使用後端文件服務 URL
+    final_url = f'{backend_url}/api/file/{file_id}.{extension}'
+    
+    # 嘗試上傳到 Supabase Storage（如果已配置）
     if supabase_storage.initialized:
         try:
             # Storage path in Supabase
@@ -99,7 +109,7 @@ async def upload_image(file: UploadFile = File(...), max_size_mb: float = 3.0):
             # Upload to Supabase Storage
             public_url = await supabase_storage.upload_file(file_path, storage_path)
             
-            # Use Supabase URL
+            # Use Supabase URL (優先使用 Supabase 的公共 URL)
             final_url = public_url
             
             print(f"✅ Image uploaded to Supabase Storage: {public_url}")
@@ -113,13 +123,8 @@ async def upload_image(file: UploadFile = File(...), max_size_mb: float = 3.0):
                 
         except Exception as e:
             print(f"❌ Failed to upload to Supabase Storage: {e}")
-            # Fallback to local URL
-            backend_url = os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
-            final_url = f'{backend_url}/api/file/{file_id}.{extension}'
-    else:
-        # Use local URL if Supabase Storage not available
-        backend_url = os.environ.get('BACKEND_URL', f'http://localhost:{DEFAULT_PORT}')
-        final_url = f'{backend_url}/api/file/{file_id}.{extension}'
+            # Fallback 已經在上面設置好了
+            print(f"📁 Using fallback URL: {final_url}")
 
     # 返回文件信息
     print('🦄upload_image file_path', file_path)
