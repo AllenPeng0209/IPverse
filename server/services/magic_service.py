@@ -6,7 +6,7 @@ import json
 from typing import Dict, Any, List
 
 # Import service modules
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from services.OpenAIAgents_service import create_jaaz_response
 from services.websocket_service import send_to_websocket  # type: ignore
 from services.stream_service import add_stream_task, remove_stream_task
@@ -45,11 +45,11 @@ async def handle_magic(data: Dict[str, Any]) -> None:
     if len(messages) == 1:
         # create new session
         prompt = messages[0].get('content', '')
-        await db_service.create_chat_session(session_id, 'gpt', 'jaaz', canvas_id, (prompt[:200] if isinstance(prompt, str) else ''))
+        await db_adapter.create_chat_session(session_id, 'gpt', 'jaaz', canvas_id, (prompt[:200] if isinstance(prompt, str) else ''))
 
     # Save user message to database
     if len(messages) > 0:
-        await db_service.create_message(
+        await db_adapter.create_message(
             session_id, messages[-1].get('role', 'user'), json.dumps(messages[-1])
         )
 

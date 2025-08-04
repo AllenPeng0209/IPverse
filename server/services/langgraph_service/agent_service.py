@@ -1,5 +1,5 @@
 from models.tool_model import ToolInfoJson
-from services.db_service import db_service
+from services.db_adapter import db_adapter
 from .StreamProcessor import StreamProcessor
 from .agent_manager import AgentManager
 import traceback
@@ -128,7 +128,7 @@ async def langgraph_multi_agent(
 
         # 6. 流处理
         processor = StreamProcessor(
-            session_id, db_service, send_to_websocket)  # type: ignore
+            session_id, db_adapter, send_to_websocket)  # type: ignore
         await processor.process_stream(swarm, fixed_messages, context)
 
     except Exception as e:
