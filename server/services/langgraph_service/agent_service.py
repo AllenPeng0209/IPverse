@@ -24,23 +24,41 @@ def _fix_chat_history(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """修复聊天历史中不完整的工具调用
 
     根据LangGraph文档建议，移除没有对应ToolMessage的tool_calls
-    参考: https://langchain-ai.github.io/langgraph/troubleshooting/errors/INVALID_CHAT_HISTORY/
+    參考: https://langchain-ai.github.io/langgraph/troubleshooting/errors/INVALID_CHAT_HISTORY/
+    
+    同时过滤掉缺少tool_call_id的tool消息，防止KeyError
     """
     if not messages:
         return messages
 
     fixed_messages: List[Dict[str, Any]] = []
     tool_call_ids: Set[str] = set()
+    removed_tool_msgs: List[str] = []
 
-    # 第一遍：收集所有ToolMessage的tool_call_id
+    # 第一遍：收集所有有效的ToolMessage的tool_call_id，同时过滤无效的tool消息
     for msg in messages:
-        if msg.get('role') == 'tool' and msg.get('tool_call_id'):
+        if msg.get('role') == 'tool':
             tool_call_id = msg.get('tool_call_id')
             if tool_call_id:
+                # 有效的tool消息
                 tool_call_ids.add(tool_call_id)
+            else:
+                # 無效的tool消息（缺少tool_call_id），記錄並跳過
+                content_preview = str(msg.get('content', ''))[:50]
+                removed_tool_msgs.append(content_preview)
+                print(f"⚠️ 跳過缺少tool_call_id的tool消息: {content_preview}")
+                continue  # 不添加到fixed_messages中
 
-    # 第二遍：修复AIMessage中的tool_calls
+    # 記錄清理的tool消息統計
+    if removed_tool_msgs:
+        print(f"🔧 修復消息歷史：移除了 {len(removed_tool_msgs)} 個無效的tool消息")
+
+    # 第二遍：修复AIMessage中的tool_calls，並添加所有有效消息
     for msg in messages:
+        # 跳過已經在第一遍中處理過的無效tool消息
+        if msg.get('role') == 'tool' and not msg.get('tool_call_id'):
+            continue  # 已經在第一遍中跳過了
+            
         if msg.get('role') == 'assistant' and msg.get('tool_calls'):
             # 过滤掉没有对应ToolMessage的tool_calls
             valid_tool_calls: List[Dict[str, Any]] = []
@@ -56,7 +74,7 @@ def _fix_chat_history(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             # 记录修复信息
             if removed_calls:
                 print(
-                    f"🔧 修复消息历史：移除了 {len(removed_calls)} 个不完整的工具调用: {removed_calls}")
+                    f"🔧 修復消息历史：移除了 {len(removed_calls)} 個不完整的工具调用: {removed_calls}")
 
             # 更新消息
             if valid_tool_calls:
@@ -70,6 +88,7 @@ def _fix_chat_history(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             # 如果既没有有效tool_calls也没有content，跳过这条消息
         else:
             # 非assistant消息或没有tool_calls的消息直接保留
+            # (包括有效的tool消息，已經在第一遍中驗證過)
             fixed_messages.append(msg)
 
     return fixed_messages
